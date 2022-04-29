@@ -1,0 +1,26 @@
+/* CSS styles */
+
+.grid-container {
+  display: grid;
+  width: 820px;
+  height: 820px;
+  /*border: 1px solid rgba(0, 0, 0, 0.3);*/
+  border-radius: 30px;
+  box-shadow: 1px 1px 1px #999;
+  grid-template-columns: 100px 100px 100px 100px 100px 100px 100px 100px;
+}
+
+.tile {
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  width: 100px;
+  height: 100px;
+}
+.tile:hover {
+  border: 1px solid rgba(0, 0, 0, 0.8);
+}
+
+h1 {
+font-family: Impact, sans-serif;
+color: #CE5937;
+}
+	  
