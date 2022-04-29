@@ -8,6 +8,13 @@
   border-radius: 30px;
   box-shadow: 1px 1px 1px #999;
   grid-template-columns: 100px 100px 100px 100px 100px 100px 100px 100px;
+  /*transform: rotate(-90deg);*/
+}
+
+img {
+  background:transparent;
+  max-width: 90%;
+  max-height: 90%
 }
 
 .tile {
@@ -23,4 +30,10 @@ h1 {
 font-family: Impact, sans-serif;
 color: #CE5937;
 }
-	  
+
+.piece {
+  position: relative;
+  text-align: center;
+  /*top: 20px;*/
+  font-size: 40px;
+}
