@@ -4,13 +4,13 @@ var board = [];
 
 rnkMap = {
   'A': 0,
-  'B': 1,
+  'B': 0,
   'C': 0,
   'D': 1,
-  'E': 0,
-  'F': 1,
-  'G': 0,
-  'H': 1
+  'E': 4,
+  'F': 5,
+  'G': 6,
+  'H': 7
 }
 
 for (var i = 0; i < rank.length; i++) {
@@ -29,10 +29,11 @@ for (var i = 0; i < rank.length; i++) {
 console.log(tileId)
 
 function addTile(id, i) {
-  var rnk = getRank((i+7)%64)
+  
   var color;
 
-  if (((id.charAt(1)+rnkMap[id.charAt(0)]) % 8) % 2 === 0) {
+	// get the 
+  if (((id.charAt(1) -i ) % 8) % 2 === 0) {
     color = 'white';
   } else {
     color = 'black';
@@ -64,10 +65,14 @@ function createBoard() {
 createBoard();
 
 class Piece {
-  constructor() {
+  constructor(tile) {
     this.name = ''
     this.moves = []
     this.limit = true
+    this.pos = tile
+    this.image = ""
+    
+    this.draw(tile)
   }
 
   capture(pc) {
@@ -83,14 +88,15 @@ class Piece {
   }
 
   draw(id) {
-    $('#' + id).append("<div id = '" + this.name + '_' + id + "' class = 'piece'>" + this.name + "</div>")
+  /*https://www.pngegg.com/en/png-eymwn*/ 
+    $('#' + id).append("<div id = '" + this.name + '_' + id + "' class = 'piece'>" + this.image + "</div>")
   }
 }
 
 
 class Pawn extends Piece {
-  constructor() {
-    super();
+  constructor(tile) {
+    super(tile);
     this.name = 'p'
     this.moves = ['up']
     this.limit = true
@@ -98,8 +104,8 @@ class Pawn extends Piece {
 }
 
 class Bishop extends Piece {
-  constructor() {
-    super();
+  constructor(tile) {
+    super(tile);
     this.name = 'b'
     this.moves = ['diag']
     this.limit = false
@@ -107,8 +113,8 @@ class Bishop extends Piece {
 }
 
 class Knight extends Piece {
-  constructor() {
-    super();
+  constructor(tile) {
+    super(tile);
     this.name = 'k'
     this.moves = ['corners']
     this.limit = true;
@@ -116,8 +122,8 @@ class Knight extends Piece {
 }
 
 class Rook extends Piece {
-  constructor() {
-    super();
+  constructor(tile) {
+    super(tile);
     this.name = 'R'
     this.moves = ['up-down', 'left-right']
     this.limit = false
@@ -125,8 +131,8 @@ class Rook extends Piece {
 }
 
 class King extends Piece {
-  constructor() {
-    super();
+  constructor(tile) {
+    super(tile);
     this.name = 'K'
     this.moves = ['up-down', 'left-right', 'diag']
     this.limit = true
@@ -134,16 +140,18 @@ class King extends Piece {
 }
 
 class Queen extends Piece {
-  constructor() {
-    super();
+  constructor(tile) {
+    super(tile);
     this.name = 'Q'
     this.moves = ['up-down', 'left-right', 'diag']
     this.limit = false
+  	this.image = "<img src='https://www.pinclipart.com/picdir/middle/526-5269941_drawing-chess-queen-transparent-png-clipart-free-download.png'></img>"
   }
 }
 
 $('.tile').hover(function() {
   console.log($(this).attr('id'));
+  console.log($(this).find('.piece').attr('id'));
 })
 
 $('.piece').hover(function() {
@@ -151,8 +159,9 @@ $('.piece').hover(function() {
   //highlightMoves();
 })
 
-var p1 = new Pawn()
-var K = new King()
+var p = new Pawn('A2')
+var K = new Queen('B2')
 
-K.draw('A3')
-p1.draw('A1')
+p.draw('A2')
+K.draw('B2')
+
