@@ -15,7 +15,7 @@ rnkMap = {
 
 for (var i = 0; i < rank.length; i++) {
   for (var j = 0; j < file.length; j++) {
-    board.push([rnkMap[i], file[j]]);
+    board.push([rnkMap[i], file[i]]);
   }
 }
 
@@ -23,20 +23,21 @@ var tileId = []
 
 for (var i = 0; i < rank.length; i++) {
   for (var j = 0; j < file.length; j++) {
-    tileId.push(rank[i] + file[j])
+    tileId.push(rank[j] + file[7-i])
   }
 }
 console.log(tileId)
 
 function addTile(id, i) {
-  var rnk = getRank(i)
+  var rnk = getRank((i+7)%64)
   var color;
 
-  if (((i + rnkMap[rnk]) % 8) % 2 === 0) {
+  if (((id.charAt(1)+rnkMap[id.charAt(0)]) % 8) % 2 === 0) {
     color = 'white';
   } else {
     color = 'black';
   }
+	
 
   var tile = "<div class='tile' id='" + id + "'> </div>";
   $('.grid-container').append(tile)
@@ -146,8 +147,12 @@ $('.tile').hover(function() {
 })
 
 $('.piece').hover(function() {
-  highlightMoves();
+	console.log($('.tile > div:eq(1)').attr('id'))
+  //highlightMoves();
 })
 
 var p1 = new Pawn()
+var K = new King()
+
+K.draw('A3')
 p1.draw('A1')
