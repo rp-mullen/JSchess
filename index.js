@@ -1,35 +1,16 @@
 var rank = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 var file = ['1', '2', '3', '4', '5', '6', '7', '8'];
-var board = [];
 
-rnkMap = {
-  'A': 0,
-  'B': 0,
-  'C': 0,
-  'D': 1,
-  'E': 4,
-  'F': 5,
-  'G': 6,
-  'H': 7
-}
-
-for (var i = 0; i < rank.length; i++) {
-  for (var j = 0; j < file.length; j++) {
-    board.push([rnkMap[i], file[i]]);
-  }
-}
+var board = {};
 
 var tileId = []
-
 for (var i = 0; i < rank.length; i++) {
   for (var j = 0; j < file.length; j++) {
     tileId.push(rank[j] + file[7-i])
   }
 }
-console.log(tileId)
 
-function addTile(id, i) {
-  
+function addTile(id, i) {  
   var color;
 
 	// get the 
@@ -65,14 +46,14 @@ function createBoard() {
 createBoard();
 
 class Piece {
-  constructor(tile) {
-    this.name = ''
+  constructor(tile,name) {
+    this.name = name
     this.moves = []
     this.limit = true
     this.pos = tile
-    this.image = ""
+    this.char = ""
     
-    this.draw(tile)
+    this.draw()
   }
 
   capture(pc) {
@@ -87,65 +68,107 @@ class Piece {
     if (this.moves.includes('corners')) {}
   }
 
-  draw(id) {
+  draw() {
+    
   /*https://www.pngegg.com/en/png-eymwn*/ 
-    $('#' + id).append("<div id = '" + this.name + '_' + id + "' class = 'piece'>" + this.image + "</div>")
+    $('#' + this.pos).append("<div id = '" + this.name + '_' + this.pos + "' class = 'piece'>" + this.char + "</div>")
   }
 }
 
 
 class Pawn extends Piece {
-  constructor(tile) {
-    super(tile);
+  constructor(tile,color) {
+    super(tile,'p');
     this.name = 'p'
     this.moves = ['up']
-    this.limit = true
+    this.limit = true;
+    if (color === 'white') {
+      this.char = "&#9817;"
+    }
+    else if (color === "black") {
+      this.char = "&#9823;"
+    }
+    this.draw();
   }
 }
 
 class Bishop extends Piece {
-  constructor(tile) {
-    super(tile);
+  constructor(tile,color) {
+    super(tile,'b');
     this.name = 'b'
     this.moves = ['diag']
     this.limit = false
+    if (color === 'white') {
+      this.char = "&#9815;"
+    }
+    else if (color === 'black') {
+      this.char = "&#9821;"
+    }
+    this.draw();
   }
 }
 
 class Knight extends Piece {
-  constructor(tile) {
-    super(tile);
+  constructor(tile,color) {
+    super(tile,'k');
     this.name = 'k'
     this.moves = ['corners']
     this.limit = true;
+    if (color === 'white') {
+      this.char = "&#9816;"
+    }
+    if (color === 'black') {
+      this.char = "&#9822;"
+    }
+    this.draw();
   }
 }
 
 class Rook extends Piece {
-  constructor(tile) {
-    super(tile);
+  constructor(tile,color) {
+    super(tile,'R');
     this.name = 'R'
     this.moves = ['up-down', 'left-right']
     this.limit = false
+    if (color === "white") {
+      this.char = "&#9814;"
+    }
+    else if (color === "black") {
+      this.char = "&#9820;"
+    }
+    this.draw();
   }
 }
 
 class King extends Piece {
-  constructor(tile) {
-    super(tile);
+  constructor(tile,color) {
+    super(tile,'K');
     this.name = 'K'
     this.moves = ['up-down', 'left-right', 'diag']
     this.limit = true
+    if (color === "white") {
+      this.char = "&#9812;"
+    }
+    else if (color === "black") {
+      this.char = "&#9818;"
+    }
+    this.draw();
   }
 }
 
 class Queen extends Piece {
-  constructor(tile) {
-    super(tile);
+  constructor(tile,color) {
+    super(tile,'Q');
     this.name = 'Q'
     this.moves = ['up-down', 'left-right', 'diag']
     this.limit = false
-  	this.image = "<img src='https://www.pinclipart.com/picdir/middle/526-5269941_drawing-chess-queen-transparent-png-clipart-free-download.png'></img>"
+    if (color === "white") {
+      this.char = "&#9813;"
+    }
+  	else if (color === "black") {
+      this.char = "&#9819;"
+    }
+    this.draw();
   }
 }
 
@@ -155,13 +178,47 @@ $('.tile').hover(function() {
 })
 
 $('.piece').hover(function() {
-	console.log($('.tile > div:eq(1)').attr('id'))
+	console.log("piece: " + $('.tile > div:eq(1)').attr('id'))
   //highlightMoves();
 })
 
-var p = new Pawn('A2')
-var K = new Queen('B2')
+$('.tile').click(function() {
+  var piece = $(this).find('.piece')
+  if (typeof piece !== undefined) {
+    var id = piece.attr('id')
+    console.log("Piece: " + id)
+  }
+})
 
-p.draw('A2')
-K.draw('B2')
+function init() {
+  var letters = "ABCDEFGH"
+  for (var i = 0; i < letters.length; i++) {
+    let id_white = letters[i] + "2";
+    let id_black = letters[i] + "7"
+    board["p_"+id_white] = new Pawn(id_white,"white")
+    board["p_"+id_black] = new Pawn(id_black,"black")
+  }
+  
+  board["R_A1"] = new Rook("A1","white")
+  board["R_H1"] = new Rook("H1","white")
+  board["R_A8"] = new Rook("A8","black")
+  board["R_H8"] = new Rook("H8","black")
+  
+  board["k_B1"] = new Knight("B1","white")
+  board["k_G1"] = new Knight("G1","white")
+  board["k_B8"] = new Knight("B8","black")
+  board["k_G8"] = new Knight("G8","black")
+  
+  board["b_C1"] = new Bishop("C1","white")
+  board["b_F1"] = new Bishop("F1","white")
+  board["b_C8"] = new Bishop("C8","black")
+  board["b_F8"] = new Bishop("F8","black")
+  
+  board["Q_D1"] = new Queen("D1","white")
+  board["Q_E8"] = new Queen("E8","black")
+  
+  board["K_w"] = new King("E1","white")
+  board["K_b"] = new King("D8","black")
+}
 
+init()
