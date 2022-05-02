@@ -1,11 +1,9 @@
-/* CSS styles */
+/* Chessboard */
 
 .grid-container {
   display: grid;
-  width: 820px;
+  width: 800px;
   height: 820px;
-  /*border: 1px solid rgba(0, 0, 0, 0.3);*/
-  border-radius: 30px;
   box-shadow: 1px 1px 1px #999;
   grid-template-columns: 100px 100px 100px 100px 100px 100px 100px 100px;
   /*transform: rotate(-90deg);*/
@@ -19,6 +17,7 @@ img {
 
 .tile {
   border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
   width: 100px;
   height: 100px;
 }
@@ -34,6 +33,10 @@ color: #CE5937;
 .piece {
   position: relative;
   text-align: center;
-  /*top: 20px;*/
-  font-size: 40px;
+  /*top: -20px;*/
+  font-size: 70px;
+}
+.piece:hover {
+  cursor: default;
+  color: red;
 }
