@@ -2,7 +2,9 @@ var rank = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 var file = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
 const rankMap = {'A':1, 'B':2, 'C':3, 'D':4, 'E':5, 'F':6, 'G':7, 'H':8}
-const dot = "<svg height='80' width='70'><circle cx='48' cy='50' r='11' fill='red'/></svg>";
+const dot = "<svg height='80' width='70'><circle cx='48' cy='50' r='9' fill='red'/></svg>";
+
+// helper function: remove item from array by value
 function remove(arr,e) {
   var index = arr.indexOf(e);
   if (index > -1) {
@@ -10,10 +12,15 @@ function remove(arr,e) {
   }
 }
 
+function getKeyByValue(object, value) {
+  return Object.keys(object).find(key => object[key] === value);
+}
+
 class Chessboard {
   constructor() {
     this.board = {};
     this.tileId = [];
+    this.dots = [];
     this.generateTileIDs();
 
     this.freeSpaces = this.tileId;
@@ -49,8 +56,10 @@ class Chessboard {
       }
       if (this.freeSpaces.includes(poss)) {
         $('#'+poss).append(dot);
+        this.dots.push(poss);
         if (pc.start === true && this.freeSpaces.includes(poss_start)) {
           $('#'+poss_start).append(dot);
+          this.dots.push(poss_start);
         }
       }
 
@@ -58,7 +67,15 @@ class Chessboard {
 
     //      KNIGHT
     if (pc.name === 'k') {
-
+      var poss = [];
+      var currpos = [rankMap[pc.pos[0]], Number(pc.pos[1])]
+      console.log('Knight: ' + currpos)
+      // up 2 over 1
+      poss.push(getKeyByValue(currpos[0]+2)+(currpos[1]+1))
+      console.log(getKeyByValue(currpos[0]+2));
+      // up 1 over 2
+      // down 1 over 2
+      // down 2 over 1
     }
 
   }
@@ -77,6 +94,14 @@ class Chessboard {
     if (color === 'black') {
       $('#' + id).css('color', 'white');
     }
+  }
+
+  deleteDots() {
+    for (var i = 0; i < this.dots.length; i++) {
+      var dot = this.dots[i];
+      $("#"+dot).empty();
+    }
+    this.dots = []
   }
 
   //                      INITIALIZE
@@ -252,6 +277,9 @@ let B = new Chessboard();
 
 //                            EVENT HANDLERS
 //-----------------------------------------------------------------------------
+var currPiece;
+var lastPiece;
+
 $('.tile').hover(function() {
   console.log($(this).attr('id'));
   console.log($(this).find('.piece').attr('id'));
@@ -263,16 +291,33 @@ $('.piece').hover(function() {
 })
 
 $('.tile').click(function() {
+  if (currPiece) {
+    lastPiece = currPiece;
+    B.deleteDots();
+    let lastPieceId = lastPiece.name + "_" + lastPiece.pos;
+    console.log('last piece: ' + lastPieceId)
+
+    let cl;
+    if ((((rankMap[lastPiece.pos[0]]) - Number(lastPiece.pos[1])) % 8)%2 === 0) {
+      cl = 'white';
+    }
+    else {
+      cl = 'black';
+    }
+
+    $("#"+lastPiece.pos).css('color',cl);
+  }
   var pieceHTML = $(this).find('.piece')
   if (typeof pieceHTML !== undefined) {
     var id = pieceHTML.attr('id')
     console.log("Piece: " + id)
 
-    var piece = B.board[id]
-    console.log(piece)
-    B.move(piece);
+    currPiece = B.board[id]
+    console.log(currPiece)
+    B.move(currPiece);
   }
 })
+
 //-----------------------------------------------------------------------------
 
 //                           INITIALIZER
