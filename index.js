@@ -39,8 +39,8 @@ function getPiece(type, tile, color) {
   }
 }
 
-function currPos(pc) {
-  return [rankMap[(ps.pos[0], pc.pos[1])]];
+function posToTile(pos) {
+  return KBV(rankMap,pos[0])+pos[1]
 }
 
 class Chessboard {
@@ -68,120 +68,7 @@ class Chessboard {
   //                      MOVE PIECE
   moveReady(pc) {
     $("#" + pc.pos).css("color", "red");
-
-    //      PAWN
-    if (pc.name === "p") {
-      console.log("pawn moving...");
-      if (pc.color === "white") {
-        var poss = pc.pos[0] + (Number(pc.pos[1]) + 1);
-        var poss_start = poss[0] + (Number(poss[1]) + 1);
-        console.log(poss);
-      } else {
-        var poss = pc.pos[0] + (Number(pc.pos[1]) - 1);
-        var poss_start = poss[0] + (Number(poss[1]) - 1);
-        console.log(poss);
-      }
-      if (this.freeSpaces.includes(poss)) {
-        $("#" + poss).append(dot);
-        this.dots.push(poss);
-        if (pc.start === true && this.freeSpaces.includes(poss_start)) {
-          $("#" + poss_start).append(dot);
-          this.dots.push(poss_start);
-        }
-      }
-      pc.ready = true;
-    }
-
-    //      KNIGHT
-    if (pc.name === "k") {
-      console.log("knight moving...");
-      var poss = [];
-      var currpos = [rankMap[pc.pos[0]], Number(pc.pos[1])];
-      console.log("Knight: " + currpos);
-
-      // up 2 right 1
-      if (KBV(rankMap, currpos[0] + 1)) {
-        console.log("space defined");
-        var space = KBV(rankMap, currpos[0] + 1) + (Number(currpos[1]) + 2);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-      // up 2 left 1
-      if (KBV(rankMap, currpos[0] - 1)) {
-        console.log("space defined");
-        var space = KBV(rankMap, currpos[0] - 1) + (Number(currpos[1]) + 2);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-      // up 1 right 2
-      if (KBV(rankMap, currpos[0] + 2)) {
-        var space = KBV(rankMap, currpos[0] + 2) + Number(currpos[1] + 1);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-      // up 1 left 2
-      if (KBV(rankMap, currpos[0] - 2)) {
-        var space = KBV(rankMap, currpos[0] - 2) + Number(currpos[1] + 1);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-      // down 1 left 2
-      if (KBV(rankMap, currpos[0] - 2)) {
-        var space = KBV(rankMap, currpos[0] - 2) + Number(currpos[1] - 1);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-
-      if (KBV(rankMap, currpos[0] - 1)) {
-        var space = KBV(rankMap, currpos[0] - 1) + Number(currpos[1] - 2);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-
-      if (KBV(rankMap, currpos[0] + 2)) {
-        var space = KBV(rankMap, currpos[0] + 2) + Number(currpos[1] + 1);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-
-      if (KBV(rankMap, currpos[0] + 2)) {
-        var space = KBV(rankMap, currpos[0] + 2) + Number(currpos[1] - 1);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-      //
-      if (KBV(rankMap, currpos[0] + 1)) {
-        var space = KBV(rankMap, currpos[0] + 1) + Number(currpos[1] - 2);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-
-      // add dots
-      for (var i = 0; i < poss.length; i++) {
-        $("#" + poss[i]).append(dot);
-        this.dots.push(poss[i]);
-      }
-    }
-
-    if (pc.name === "b") {
-      var poss = [];
-      var currpos = currPos(pc);
-      if (KBV(currPos[0] + 1)) {
-        var space = KBV(currPos[0] + 1) + (Number(currpos[1]) + 1);
-        if (this.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-      }
-    }
+    pc.moveset(this)     
   }
 
   move(pc, tile) {
@@ -308,6 +195,9 @@ class Piece {
         "</div>"
     );
   }
+  
+  moveset(B) {
+  }
 }
 
 class Pawn extends Piece {
@@ -323,7 +213,31 @@ class Pawn extends Piece {
     }
     this.draw();
   }
-}
+  
+  
+  moveset(B) {
+    console.log("pawn moving...");
+      if (this.color === "white") {
+        var poss = this.pos[0] + (Number(this.pos[1]) + 1);
+        var poss_start = poss[0] + (Number(poss[1]) + 1);
+        console.log(poss);
+      } else {
+        var poss = this.pos[0] + (Number(this.pos[1]) - 1);
+        var poss_start = poss[0] + (Number(poss[1]) - 1);
+        console.log(poss);
+      }
+      if (B.freeSpaces.includes(poss)) {
+        $("#" + poss).append(dot);
+        B.dots.push(poss);
+        if (this.start === true && B.freeSpaces.includes(poss_start)) {
+          $("#" + poss_start).append(dot);
+          B.dots.push(poss_start);
+        }
+      }
+      this.ready = true;
+    }
+  }
+
 
 class Bishop extends Piece {
   constructor(tile, color) {
@@ -336,14 +250,38 @@ class Bishop extends Piece {
     }
     this.draw();
   }
+  
+  moveset(B) {
+    // if nextposition not free, stop
+    var currpos = [rankMap[this.pos[0]], this.pos[1]]
+    let poss = []
+    let boundariesFound = 0
+    let pos = currpos
+    while (boundariesFound !== 1) {
+      pos[0]++;
+      pos[1]++; 
+      console.log(pos)
+      console.log(posToTile(pos))
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    for (var i = 0; i < poss.length; i++) {
+      $("#" + poss[i]).append(dot);
+        B.dots.push(poss[i]);
+    }
+  }
 }
 
 class Knight extends Piece {
   constructor(tile, color) {
     super(tile, "k", color);
     this.name = "k";
-    this.moves = ["corners"];
-    this.limit = true;
     if (color === "white") {
       this.char = "&#9816;";
     }
@@ -351,6 +289,75 @@ class Knight extends Piece {
       this.char = "&#9822;";
     }
     this.draw();
+  }
+  
+  moveset(B) {
+    
+      console.log("knight moving...");
+      var poss = [];
+      var currpos = [rankMap[this.pos[0]],this.pos[1]];      
+      // up 2 right 1
+      if (KBV(rankMap, currpos[0] + 1)) {
+        var space = KBV(rankMap, currpos[0] + 1) + (Number(currpos[1]) + 2);
+        if (B.freeSpaces.includes(space)) {
+          poss.push(space);
+        }
+      }
+      // up 2 left 1
+      if (KBV(rankMap, currpos[0] - 1)) {
+        var space = KBV(rankMap, currpos[0] - 1) + (Number(currpos[1]) + 2);
+        if (B.freeSpaces.includes(space)) {
+          poss.push(space);
+        }
+      }
+      // up 1 right 2
+      if (KBV(rankMap, currpos[0] + 2)) {
+        var space = KBV(rankMap, currpos[0] + 2) + (Number(currpos[1]) + 1);
+        if (B.freeSpaces.includes(space)) {
+          poss.push(space);
+        }
+      }
+      // up 1 left 2
+      if (KBV(rankMap, currpos[0] - 2)) {
+        var space = KBV(rankMap, currpos[0] - 2) + (Number(currpos[1]) + 1);
+        if (B.freeSpaces.includes(space)) {
+          poss.push(space);
+        }
+      }
+      // down 1 left 2
+      if (KBV(rankMap, currpos[0] - 2)) {
+        var space = KBV(rankMap, currpos[0] - 2) + Number(currpos[1] - 1);
+        if (B.freeSpaces.includes(space)) {
+          poss.push(space);
+        }
+      }
+      // down 2 left 1
+      if (KBV(rankMap, currpos[0] - 1)) {
+        var space = KBV(rankMap, currpos[0] - 1) + Number(currpos[1] - 2);
+        if (B.freeSpaces.includes(space)) {
+          poss.push(space);
+        }
+      }
+      // down 1 right 2
+      if (KBV(rankMap, currpos[0] + 2)) {
+        var space = KBV(rankMap, currpos[0] + 2) + Number(currpos[1] - 1);
+        if (B.freeSpaces.includes(space)) {
+          poss.push(space);
+        }
+      }
+      // down 2 right 1
+      if (KBV(rankMap, currpos[0] + 1)) {
+        var space = KBV(rankMap, currpos[0] + 1) + Number(currpos[1] - 2);
+        if (B.freeSpaces.includes(space)) {
+          poss.push(space);
+        }
+      }
+      // add dots
+      for (var i = 0; i < poss.length; i++) {
+        $("#" + poss[i]).append(dot);
+        B.dots.push(poss[i]);
+      }
+    
   }
 }
 
