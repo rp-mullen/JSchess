@@ -62,7 +62,7 @@ class Chessboard {
     this.tileId = [];
     this.dots = [];
     this.captureSet = []
-    
+
     this.generateTileIDs();
 
     this.freeSpaces = this.tileId;
@@ -83,7 +83,7 @@ class Chessboard {
   //                      MOVE PIECE
   moveReady(pc) {
     $("#" + pc.pos).css("color", "red");
-    pc.moveset(this) 
+    pc.moveset(this)
     pc.captureSet(this)
   }
 
@@ -106,13 +106,14 @@ class Chessboard {
     console.log("newpiece: " + this.board[newpiece].id);
     this.clearCaptureSet()
   }
-  
+
   capture(atkr,captive) {
     $("#"+captive.pos).empty()
+    $("#"+captive.pos).css('color',getColor(captive.pos))
     this.move(atkr,captive.pos)
     delete this.board[captive.id]
     this.deleteDots()
-    
+
   }
 
   //                    ADD TILE SQUARES
@@ -146,7 +147,7 @@ class Chessboard {
     }
     this.captureSet = [];
   }
-  
+
   //                      INITIALIZE
   init() {
     for (var i = 0; i < this.tileId.length; i++) {
@@ -228,7 +229,7 @@ class Piece {
         "</div>"
     );
   }
-  
+
   moveset(B) {
   }
 }
@@ -246,8 +247,8 @@ class Pawn extends Piece {
     }
     this.draw();
   }
-  
-  
+
+
   moveset(B) {
     console.log("pawn moving...");
       if (this.color === "white") {
@@ -269,7 +270,7 @@ class Pawn extends Piece {
       }
       this.ready = true;
     }
-  
+
   captureSet(B) {
     let dir;
     if (this.color === 'white') {
@@ -282,10 +283,10 @@ class Pawn extends Piece {
     var posL = [rankMap[this.pos[0]]-dir,Number(this.pos[1])+dir]
     console.log('posR: '+posR +' '+posToTile(posR))
     console.log('posL: '+posL+ ' '+posToTile(posL))
-    
+
     if ($('#'+posToTile(posR)).find('.piece')[0]) {
       console.log('piece found R: ' + ($('#'+posToTile(posR)).find('.piece').attr('id')))
-      
+
       let pieceR = B.board[$('#'+posToTile(posR)).find('.piece').attr('id')]
       console.log('pieceR: '+pieceR.id)
       if (pieceR.color !== this.color) {
@@ -293,7 +294,7 @@ class Pawn extends Piece {
         B.captureSet.push(pieceR);
       }
     }
-    
+
     if ($('#'+posToTile(posL)).find('.piece')[0]) {
       console.log('piece found L')
       let pieceL = B.board[$('#'+posToTile(posL)).find('.piece').attr('id')]
@@ -302,10 +303,10 @@ class Pawn extends Piece {
         B.captureSet.push(pieceL);
       }
     }
-  
+
   }
-  
-  
+
+
  }
 
 
@@ -321,22 +322,22 @@ class Bishop extends Piece {
     }
     this.draw();
   }
-  
+
   moveset(B) {
     var currpos = [rankMap[this.pos[0]], this.pos[1]]
     let poss = []
     let boundariesFound = 0
     let pos = currpos
-    
+
     // calculate free up to 4 boundaries (either a piece or end of board)
     while (boundariesFound !== 1) {
       pos[0]++;
-      pos[1]++; 
+      pos[1]++;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
         }
-        else {  
+        else {
           this.boundaries.push(posToTile(pos))
           break;
         }
@@ -348,7 +349,7 @@ class Bishop extends Piece {
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 2) {
       pos[0]--;
-      pos[1]++; 
+      pos[1]++;
       console.log(this.pos+' '+pos)
       console.log(posToTile(pos))
       if (posToTile(pos)) {
@@ -365,11 +366,11 @@ class Bishop extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 3) {
       pos[0]++;
-      pos[1]--; 
+      pos[1]--;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -384,11 +385,11 @@ class Bishop extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 4) {
       pos[0]--;
-      pos[1]--; 
+      pos[1]--;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -403,26 +404,27 @@ class Bishop extends Piece {
         boundariesFound++;
       }
     }
-    
-    
+
+
     for (var i = 0; i < poss.length; i++) {
       $("#" + poss[i]).append(dot);
         B.dots.push(poss[i]);
     }
   }
-  
+
   captureSet(B) {
     console.log('bishop boundary pieces: ' + this.boundaries)
     for (var i = 0; i < this.boundaries.length; i++) {
       var tile = this.boundaries[i]
         if ($('#'+tile).find('.piece')[0]) {
-        var id = $('#'+tile).find('.piece').attr('id')
-        let pc = B.board[id]
-        console.log(pc.id)
-        $("#"+pc.pos).css('color','red')
-        if (pc.color !== this.color) {
-          B.captureSet.push(pc)
-        } 
+          var id = $('#'+tile).find('.piece').attr('id')
+          let pc = B.board[id]
+          console.log(pc.id)
+          if (pc.color !== this.color) {
+            B.captureSet.push(pc)
+            $("#"+pc.pos).css('color','red')
+
+        }
       }
     }
   }
@@ -441,12 +443,12 @@ class Knight extends Piece {
     }
     this.draw();
   }
-  
+
   moveset(B) {
-    
+
       console.log("knight moving...");
       var poss = [];
-      var currpos = [rankMap[this.pos[0]],this.pos[1]];      
+      var currpos = [rankMap[this.pos[0]],this.pos[1]];
       // up 2 right 1
       if (KBV(rankMap, currpos[0] + 1)) {
         var space = KBV(rankMap, currpos[0] + 1) + (Number(currpos[1]) + 2);
@@ -532,22 +534,22 @@ class Knight extends Piece {
         $("#" + poss[i]).append(dot);
         B.dots.push(poss[i]);
       }
-    
+
   }
-  
+
   captureSet(B) {
-    
+
     console.log('knight boundary pieces: ' + this.boundaries)
     for (var i = 0; i < this.boundaries.length; i++) {
       var tile = this.boundaries[i]
         if ($('#'+tile).find('.piece')[0]) {
-        var id = $('#'+tile).find('.piece').attr('id')
-        let pc = B.board[id]
-        console.log(pc.id)
-        $("#"+pc.pos).css('color','red')
-        if (pc.color !== this.color) {
-          B.captureSet.push(pc)
-        } 
+          var id = $('#'+tile).find('.piece').attr('id')
+          let pc = B.board[id]
+          console.log(pc.id)
+          if (pc.color !== this.color) {
+            B.captureSet.push(pc)
+            $("#"+pc.pos).css('color','red')
+        }
       }
     }
   }
@@ -565,7 +567,7 @@ class Rook extends Piece {
     }
     this.draw();
   }
-  
+
   moveset(B) {
     var currpos = [rankMap[this.pos[0]], this.pos[1]]
     let poss = []
@@ -573,7 +575,7 @@ class Rook extends Piece {
     let pos = currpos
 pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 5) {
-      pos[0]++; 
+      pos[0]++;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -588,11 +590,11 @@ pos = [rankMap[this.pos[0]], this.pos[1]];
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 6) {
       pos[0]--;
-       
+
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -607,10 +609,10 @@ pos = [rankMap[this.pos[0]], this.pos[1]];
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 7) {
-      pos[1]++; 
+      pos[1]++;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -625,10 +627,10 @@ pos = [rankMap[this.pos[0]], this.pos[1]];
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 8) {
-      pos[1]--; 
+      pos[1]--;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -643,25 +645,25 @@ pos = [rankMap[this.pos[0]], this.pos[1]];
         boundariesFound++;
       }
     }
-        
+
     for (var i = 0; i < poss.length; i++) {
       $("#" + poss[i]).append(dot);
         B.dots.push(poss[i]);
     }
   }
-  
+
   captureSet(B) {
     console.log('rook boundary pieces: ' + this.boundaries)
     for (var i = 0; i < this.boundaries.length; i++) {
       var tile = this.boundaries[i]
         if ($('#'+tile).find('.piece')[0]) {
-        var id = $('#'+tile).find('.piece').attr('id')
-        let pc = B.board[id]
-        console.log(pc.id)
-        $("#"+pc.pos).css('color','red')
-        if (pc.color !== this.color) {
-          B.captureSet.push(pc)
-        } 
+          var id = $('#'+tile).find('.piece').attr('id')
+          let pc = B.board[id]
+          console.log(pc.id)
+          if (pc.color !== this.color) {
+            B.captureSet.push(pc)
+            $("#"+pc.pos).css('color','red')
+        }
       }
     }
   }
@@ -679,17 +681,17 @@ class King extends Piece {
     }
     this.draw();
   }
-  
+
   moveset(B) {
     var currpos = [rankMap[this.pos[0]], this.pos[1]]
     let poss = []
     let boundariesFound = 0
     let pos = currpos
-    
+
     // calculate free up to 4 boundaries (either a piece or end of board)
     while (boundariesFound !== 1) {
       pos[0]++;
-      pos[1]++; 
+      pos[1]++;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos));
@@ -708,7 +710,7 @@ class King extends Piece {
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 2) {
       pos[0]--;
-      pos[1]++; 
+      pos[1]++;
       console.log(this.pos+' '+pos)
       console.log(posToTile(pos))
       if (posToTile(pos)) {
@@ -727,11 +729,11 @@ class King extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 3) {
       pos[0]++;
-      pos[1]--; 
+      pos[1]--;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -748,11 +750,11 @@ class King extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 4) {
       pos[0]--;
-      pos[1]--; 
+      pos[1]--;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -769,10 +771,10 @@ class King extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 5) {
-      pos[0]++; 
+      pos[0]++;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -789,11 +791,11 @@ class King extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 6) {
       pos[0]--;
-       
+
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -810,10 +812,10 @@ class King extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 7) {
-      pos[1]++; 
+      pos[1]++;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -830,10 +832,10 @@ class King extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 8) {
-      pos[1]--; 
+      pos[1]--;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -850,27 +852,27 @@ class King extends Piece {
         boundariesFound++;
       }
     }
-        
+
     for (var i = 0; i < poss.length; i++) {
       $("#" + poss[i]).append(dot);
         B.dots.push(poss[i]);
     }
   }
-  
+
   captureSet(B) {
     console.log('king boundary pieces: ' + this.boundaries)
     for (var i = 0; i < this.boundaries.length; i++) {
       var tile = this.boundaries[i]
         if ($('#'+tile).find('.piece')[0]) {
-        var id = $('#'+tile).find('.piece').attr('id')
-        let pc = B.board[id]
-        console.log(pc.id)
-        $("#"+pc.pos).css('color','red')
-        if (pc.color !== this.color) {
-          B.captureSet.push(pc)
-        } 
+          var id = $('#'+tile).find('.piece').attr('id')
+          let pc = B.board[id]
+          console.log(pc.id)
+          if (pc.color !== this.color) {
+            B.captureSet.push(pc)
+            $("#"+pc.pos).css('color','red')
+          }
+        }
       }
-    }
   }
 }
 
@@ -886,17 +888,17 @@ class Queen extends Piece {
     }
     this.draw();
   }
-  
+
   moveset(B) {
     var currpos = [rankMap[this.pos[0]], this.pos[1]]
     let poss = []
     let boundariesFound = 0
     let pos = currpos
-    
+
     // calculate free up to 4 boundaries (either a piece or end of board)
     while (boundariesFound !== 1) {
       pos[0]++;
-      pos[1]++; 
+      pos[1]++;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -913,7 +915,7 @@ class Queen extends Piece {
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 2) {
       pos[0]--;
-      pos[1]++; 
+      pos[1]++;
       console.log(this.pos+' '+pos)
       console.log(posToTile(pos))
       if (posToTile(pos)) {
@@ -930,11 +932,11 @@ class Queen extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 3) {
       pos[0]++;
-      pos[1]--; 
+      pos[1]--;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -949,11 +951,11 @@ class Queen extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 4) {
       pos[0]--;
-      pos[1]--; 
+      pos[1]--;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -968,10 +970,10 @@ class Queen extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 5) {
-      pos[0]++; 
+      pos[0]++;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -986,11 +988,11 @@ class Queen extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 6) {
       pos[0]--;
-       
+
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -1005,10 +1007,10 @@ class Queen extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 7) {
-      pos[1]++; 
+      pos[1]++;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -1023,10 +1025,10 @@ class Queen extends Piece {
         boundariesFound++;
       }
     }
-    
+
     pos = [rankMap[this.pos[0]], this.pos[1]];
     while (boundariesFound !== 8) {
-      pos[1]--; 
+      pos[1]--;
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
@@ -1041,26 +1043,26 @@ class Queen extends Piece {
         boundariesFound++;
       }
     }
-        
+
     for (var i = 0; i < poss.length; i++) {
       $("#" + poss[i]).append(dot);
         B.dots.push(poss[i]);
     }
-  
+
   }
-  
+
   captureSet(B) {
     console.log('queen boundary pieces: ' + this.boundaries)
     for (var i = 0; i < this.boundaries.length; i++) {
       var tile = this.boundaries[i]
         if ($('#'+tile).find('.piece')[0]) {
-        var id = $('#'+tile).find('.piece').attr('id')
-        let pc = B.board[id]
-        console.log(pc.id)
-        $("#"+pc.pos).css('color','red')
-        if (pc.color !== this.color) {
-          B.captureSet.push(pc)
-        } 
+          var id = $('#'+tile).find('.piece').attr('id')
+          let pc = B.board[id]
+          console.log(pc.id)
+          if (pc.color !== this.color) {
+            B.captureSet.push(pc)
+            $("#"+pc.pos).css('color','red')
+        }
       }
     }
   }
@@ -1088,10 +1090,10 @@ $(".tile").click(function () {
       B.deleteDots();
       B.clearCaptureSet();
       console.log(getColor($(this).attr('id')))
-      let cl = getColor(currPiece.pos)  
+      let cl = getColor(currPiece.pos)
       $("#" + lastPiece.pos).css("color", cl);
     }
-  } 
+  }
   else {
     emptyTile = false;
   }
@@ -1103,11 +1105,12 @@ $(".tile").click(function () {
       let pc = B.board[id]
       if (B.captureSet.includes(pc)) {
         B.capture(currPiece,pc)
+        B.deleteDots();
+        B.clearCaptureSet();
       }
     }
     lastPiece = currPiece;
-    B.deleteDots();
-    B.clearCaptureSet();
+
     let lastPieceId = lastPiece.name + "_" + lastPiece.pos;
     console.log("last piece: " + lastPieceId);
     console.log("curr piece: " + currPiece.id)
@@ -1127,10 +1130,10 @@ $(".tile").click(function () {
   // if you've clicked a piece then an empty tile
   if (currPiece && emptyTile) {
     if (B.dots.includes(this.id)) {
-      console.log("dot here");
+      console.log("piece then tile");
       B.deleteDots();
       B.move(currPiece, this.id);
-      let cl = getColor(currPiece.pos)  
+      let cl = getColor(currPiece.pos)
       $("#" + currPiece.pos).css("color", cl);
     }
   }
