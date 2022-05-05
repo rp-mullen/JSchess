@@ -252,25 +252,84 @@ class Bishop extends Piece {
   }
   
   moveset(B) {
-    // if nextposition not free, stop
     var currpos = [rankMap[this.pos[0]], this.pos[1]]
     let poss = []
     let boundariesFound = 0
     let pos = currpos
+    
+    // calculate free up to 4 boundaries (either a piece or end of board)
     while (boundariesFound !== 1) {
       pos[0]++;
       pos[1]++; 
-      console.log(pos)
-      console.log(posToTile(pos))
       if (posToTile(pos)) {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
+        }
+        else {
+          break;
         }
       }
       else {
         boundariesFound++;
       }
     }
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 2) {
+      pos[0]--;
+      pos[1]++; 
+      console.log(this.pos+' '+pos)
+      console.log(posToTile(pos))
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 3) {
+      pos[0]++;
+      pos[1]--; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 4) {
+      pos[0]--;
+      pos[1]--; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    
     for (var i = 0; i < poss.length; i++) {
       $("#" + poss[i]).append(dot);
         B.dots.push(poss[i]);
@@ -372,6 +431,86 @@ class Rook extends Piece {
     }
     this.draw();
   }
+  
+  moveset(B) {
+    var currpos = [rankMap[this.pos[0]], this.pos[1]]
+    let poss = []
+    let boundariesFound = 0
+    let pos = currpos
+pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 5) {
+      pos[0]++; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 6) {
+      pos[0]--;
+       
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 7) {
+      pos[1]++; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 8) {
+      pos[1]--; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+        
+    for (var i = 0; i < poss.length; i++) {
+      $("#" + poss[i]).append(dot);
+        B.dots.push(poss[i]);
+    }
+  }
 }
 
 class King extends Piece {
@@ -385,6 +524,175 @@ class King extends Piece {
     }
     this.draw();
   }
+  
+  moveset(B) {
+    var currpos = [rankMap[this.pos[0]], this.pos[1]]
+    let poss = []
+    let boundariesFound = 0
+    let pos = currpos
+    
+    // calculate free up to 4 boundaries (either a piece or end of board)
+    while (boundariesFound !== 1) {
+      pos[0]++;
+      pos[1]++; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos));
+          boundariesFound++;
+          break;
+        }
+        else {
+          break;
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 2) {
+      pos[0]--;
+      pos[1]++; 
+      console.log(this.pos+' '+pos)
+      console.log(posToTile(pos))
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+          boundariesFound++;
+          break;
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 3) {
+      pos[0]++;
+      pos[1]--; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+          boundariesFound++;
+          break;
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 4) {
+      pos[0]--;
+      pos[1]--; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+          boundariesFound++;
+          break;
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 5) {
+      pos[0]++; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+          boundariesFound++;
+          break;
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 6) {
+      pos[0]--;
+       
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+          boundariesFound++;
+          break;
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 7) {
+      pos[1]++; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+          boundariesFound++;
+          break;
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 8) {
+      pos[1]--; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+          boundariesFound++;
+          break;
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+        
+    for (var i = 0; i < poss.length; i++) {
+      $("#" + poss[i]).append(dot);
+        B.dots.push(poss[i]);
+    }
+  }
 }
 
 class Queen extends Piece {
@@ -397,6 +705,160 @@ class Queen extends Piece {
       this.char = "&#9819;";
     }
     this.draw();
+  }
+  
+  moveset(B) {
+    var currpos = [rankMap[this.pos[0]], this.pos[1]]
+    let poss = []
+    let boundariesFound = 0
+    let pos = currpos
+    
+    // calculate free up to 4 boundaries (either a piece or end of board)
+    while (boundariesFound !== 1) {
+      pos[0]++;
+      pos[1]++; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 2) {
+      pos[0]--;
+      pos[1]++; 
+      console.log(this.pos+' '+pos)
+      console.log(posToTile(pos))
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 3) {
+      pos[0]++;
+      pos[1]--; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 4) {
+      pos[0]--;
+      pos[1]--; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 5) {
+      pos[0]++; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 6) {
+      pos[0]--;
+       
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 7) {
+      pos[1]++; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+    
+    pos = [rankMap[this.pos[0]], this.pos[1]];
+    while (boundariesFound !== 8) {
+      pos[1]--; 
+      if (posToTile(pos)) {
+        if(B.freeSpaces.includes(posToTile(pos))) {
+          poss.push(posToTile(pos))
+        }
+        else {
+          break;
+          pos = [rankMap[this.pos[0]], this.pos[1]];
+        }
+      }
+      else {
+        boundariesFound++;
+      }
+    }
+        
+    for (var i = 0; i < poss.length; i++) {
+      $("#" + poss[i]).append(dot);
+        B.dots.push(poss[i]);
+    }
+  
   }
 }
 
@@ -435,7 +897,7 @@ $(".tile").click(function () {
     B.deleteDots();
     let lastPieceId = lastPiece.name + "_" + lastPiece.pos;
     console.log("last piece: " + lastPieceId);
-
+    console.log("curr piece: " + currPiece.id)
     let cl;
     if (
       ((rankMap[lastPiece.pos[0]] - Number(lastPiece.pos[1])) % 8) % 2 ===
