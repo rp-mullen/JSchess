@@ -13,6 +13,19 @@ function remove(arr, e) {
   }
 }
 
+function getColor(tile) {
+  let cl;
+    if (
+      ((rankMap[tile[0]] - Number(tile[1])) % 8) % 2 ===
+      0
+    ) {
+      cl = "white";
+    } else {
+      cl = "black";
+    }
+  return cl;
+}
+
 // key by value
 function KBV(object, value) {
   return Object.keys(object).find((key) => object[key] === value);
@@ -48,6 +61,8 @@ class Chessboard {
     this.board = {};
     this.tileId = [];
     this.dots = [];
+    this.captureSet = []
+    
     this.generateTileIDs();
 
     this.freeSpaces = this.tileId;
@@ -68,7 +83,8 @@ class Chessboard {
   //                      MOVE PIECE
   moveReady(pc) {
     $("#" + pc.pos).css("color", "red");
-    pc.moveset(this)     
+    pc.moveset(this) 
+    pc.captureSet(this)
   }
 
   move(pc, tile) {
@@ -88,6 +104,7 @@ class Chessboard {
       this.board[newpiece].start = false;
     }
     console.log("newpiece: " + this.board[newpiece].id);
+    this.clearCaptureSet()
   }
 
   //                    ADD TILE SQUARES
@@ -114,6 +131,13 @@ class Chessboard {
     this.dots = [];
   }
 
+  clearCaptureSet() {
+    for (var i = 0; i < this.captureSet.length; i++) {
+      let tile = this.captureSet[i].pos
+      $('#'+tile).css('color',getColor(tile));
+    }
+    this.captureSet = [];
+  }
   //                      INITIALIZE
   init() {
     for (var i = 0; i < this.tileId.length; i++) {
@@ -236,7 +260,37 @@ class Pawn extends Piece {
       }
       this.ready = true;
     }
+  
+  captureSet(B) {
+    var posR = [rankMap[this.pos[0]]+1,Number(this.pos[1])+1]
+    var posL = [rankMap[this.pos[0]]-1,Number(this.pos[1])+1]
+    console.log('posR: '+posR +' '+posToTile(posR))
+    console.log('posL: '+posL+ ' '+posToTile(posL))
+    
+    if ($('#'+posToTile(posR)).find('.piece')[0]) {
+      console.log('piece found R: ' + ($('#'+posToTile(posR)).find('.piece').attr('id')))
+      
+      let pieceR = B.board[$('#'+posToTile(posR)).find('.piece').attr('id')]
+      console.log('pieceR: '+pieceR.id)
+      if (pieceR.color !== this.color) {
+        $('#'+posToTile(posR)).css('color','red')
+        B.captureSet.push(pieceR);
+      }
+    }
+    
+    if ($('#'+posToTile(posL)).find('.piece')[0]) {
+      console.log('piece found L')
+      let pieceL = B.board[$('#'+posToTile(posL)).find('.piece').attr('id')]
+      if (pieceL.color !== this.color) {
+        $('#'+posToTile(posL)).css('color','red')
+        B.captureSet.push(pieceL);
+      }
+    }
+  
   }
+  
+  
+ }
 
 
 class Bishop extends Piece {
@@ -887,6 +941,13 @@ $(".tile").click(function () {
   if (!$(this).find(".piece")[0]) {
     var emptyTile = true;
     console.log("empty");
+    if (!B.dots.includes($(this).attr('id'))) {
+      console.log('id: ' + $(this).attr('id'))
+      B.deleteDots();
+      B.clearCaptureSet();
+      console.log(getColor($(this).attr('id')))
+      $(this).find('.piece').css('color',getColor($(this).attr('id')))
+    }
   } else {
     emptyTile = false;
   }
@@ -895,6 +956,7 @@ $(".tile").click(function () {
   if (currPiece && !emptyTile) {
     lastPiece = currPiece;
     B.deleteDots();
+    B.clearCaptureSet();
     let lastPieceId = lastPiece.name + "_" + lastPiece.pos;
     console.log("last piece: " + lastPieceId);
     console.log("curr piece: " + currPiece.id)
