@@ -104,15 +104,18 @@ class Chessboard {
       this.board[newpiece].start = false;
     }
     console.log("newpiece: " + this.board[newpiece].id);
-    this.clearCaptureSet()
+    $('#'+tile).css('color',getColor(tile))
+
   }
 
   capture(atkr,captive) {
+    console.log(atkr.id + ' captures ' + captive.id + '!')
     $("#"+captive.pos).empty()
     $("#"+captive.pos).css('color',getColor(captive.pos))
     this.move(atkr,captive.pos)
     delete this.board[captive.id]
     this.deleteDots()
+    this.clearCaptureSet();
 
   }
 
@@ -217,7 +220,6 @@ class Piece {
     this.char = "";
     this.color = color;
   }
-
   draw() {
     $("#" + this.pos).append(
       "<div id = '" +
@@ -229,7 +231,6 @@ class Piece {
         "</div>"
     );
   }
-
   moveset(B) {
   }
 }
@@ -250,7 +251,6 @@ class Pawn extends Piece {
 
 
   moveset(B) {
-    console.log("pawn moving...");
       if (this.color === "white") {
         var poss = this.pos[0] + (Number(this.pos[1]) + 1);
         var poss_start = poss[0] + (Number(poss[1]) + 1);
@@ -270,25 +270,14 @@ class Pawn extends Piece {
       }
       this.ready = true;
     }
-
   captureSet(B) {
-    let dir;
-    if (this.color === 'white') {
-      dir = 1
-    }
-    else {
-      dir = -1
-    }
+    let dir = 1;
+    if (this.color === 'black') { dir = -1;}
     var posR = [rankMap[this.pos[0]]+dir,Number(this.pos[1])+dir]
     var posL = [rankMap[this.pos[0]]-dir,Number(this.pos[1])+dir]
-    console.log('posR: '+posR +' '+posToTile(posR))
-    console.log('posL: '+posL+ ' '+posToTile(posL))
 
     if ($('#'+posToTile(posR)).find('.piece')[0]) {
-      console.log('piece found R: ' + ($('#'+posToTile(posR)).find('.piece').attr('id')))
-
       let pieceR = B.board[$('#'+posToTile(posR)).find('.piece').attr('id')]
-      console.log('pieceR: '+pieceR.id)
       if (pieceR.color !== this.color) {
         $('#'+posToTile(posR)).css('color','red')
         B.captureSet.push(pieceR);
@@ -296,16 +285,13 @@ class Pawn extends Piece {
     }
 
     if ($('#'+posToTile(posL)).find('.piece')[0]) {
-      console.log('piece found L')
       let pieceL = B.board[$('#'+posToTile(posL)).find('.piece').attr('id')]
       if (pieceL.color !== this.color) {
         $('#'+posToTile(posL)).css('color','red')
         B.captureSet.push(pieceL);
       }
     }
-
   }
-
 
  }
 
@@ -1082,16 +1068,18 @@ $(".tile").hover(function () {
 $(".tile").click(function () {
   // check if the clicked tile is empty
   var emptyTile;
+  var cap = false
+  // check if you clicked on an empty tile
   if (!$(this).find(".piece")[0]) {
+    let cl = getColor(currPiece.pos)
     var emptyTile = true;
     console.log("empty");
+    $("#" + currPiece.pos).css("color", cl);
     if (!B.dots.includes($(this).attr('id'))) {
       console.log('id: ' + $(this).attr('id'))
       B.deleteDots();
       B.clearCaptureSet();
-      console.log(getColor($(this).attr('id')))
-      let cl = getColor(currPiece.pos)
-      $("#" + lastPiece.pos).css("color", cl);
+      $("#" + currPiece.pos).css("color", cl);
     }
   }
   else {
@@ -1105,8 +1093,9 @@ $(".tile").click(function () {
       let pc = B.board[id]
       if (B.captureSet.includes(pc)) {
         B.capture(currPiece,pc)
-        B.deleteDots();
-        B.clearCaptureSet();
+        cap = true;
+        //B.deleteDots();
+        //B.clearCaptureSet();
       }
     }
     lastPiece = currPiece;
@@ -1147,7 +1136,12 @@ $(".tile").click(function () {
 
       currPiece = B.board[id];
       console.log(currPiece);
-      B.moveReady(currPiece);
+      if (cap !== true) {
+        B.moveReady(currPiece);
+      }
+      else {
+        cap = false;
+      }
     }
   }
 });
