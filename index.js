@@ -106,6 +106,14 @@ class Chessboard {
     console.log("newpiece: " + this.board[newpiece].id);
     this.clearCaptureSet()
   }
+  
+  capture(atkr,captive) {
+    $("#"+captive.pos).empty()
+    this.move(atkr,captive.pos)
+    delete this.board[captive.id]
+    this.deleteDots()
+    
+  }
 
   //                    ADD TILE SQUARES
   addTile(id, i) {
@@ -138,6 +146,7 @@ class Chessboard {
     }
     this.captureSet = [];
   }
+  
   //                      INITIALIZE
   init() {
     for (var i = 0; i < this.tileId.length; i++) {
@@ -262,8 +271,15 @@ class Pawn extends Piece {
     }
   
   captureSet(B) {
-    var posR = [rankMap[this.pos[0]]+1,Number(this.pos[1])+1]
-    var posL = [rankMap[this.pos[0]]-1,Number(this.pos[1])+1]
+    let dir;
+    if (this.color === 'white') {
+      dir = 1
+    }
+    else {
+      dir = -1
+    }
+    var posR = [rankMap[this.pos[0]]+dir,Number(this.pos[1])+dir]
+    var posL = [rankMap[this.pos[0]]-dir,Number(this.pos[1])+dir]
     console.log('posR: '+posR +' '+posToTile(posR))
     console.log('posL: '+posL+ ' '+posToTile(posL))
     
@@ -297,6 +313,7 @@ class Bishop extends Piece {
   constructor(tile, color) {
     super(tile, "b", color);
     this.name = "b";
+    this.boundaries = []
     if (color === "white") {
       this.char = "&#9815;";
     } else if (color === "black") {
@@ -319,7 +336,8 @@ class Bishop extends Piece {
         if(B.freeSpaces.includes(posToTile(pos))) {
           poss.push(posToTile(pos))
         }
-        else {
+        else {  
+          this.boundaries.push(posToTile(pos))
           break;
         }
       }
@@ -338,6 +356,7 @@ class Bishop extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -356,6 +375,7 @@ class Bishop extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -374,6 +394,7 @@ class Bishop extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -389,12 +410,29 @@ class Bishop extends Piece {
         B.dots.push(poss[i]);
     }
   }
+  
+  captureSet(B) {
+    console.log('bishop boundary pieces: ' + this.boundaries)
+    for (var i = 0; i < this.boundaries.length; i++) {
+      var tile = this.boundaries[i]
+        if ($('#'+tile).find('.piece')[0]) {
+        var id = $('#'+tile).find('.piece').attr('id')
+        let pc = B.board[id]
+        console.log(pc.id)
+        $("#"+pc.pos).css('color','red')
+        if (pc.color !== this.color) {
+          B.captureSet.push(pc)
+        } 
+      }
+    }
+  }
 }
 
 class Knight extends Piece {
   constructor(tile, color) {
     super(tile, "k", color);
     this.name = "k";
+    this.boundaries = []
     if (color === "white") {
       this.char = "&#9816;";
     }
@@ -415,12 +453,18 @@ class Knight extends Piece {
         if (B.freeSpaces.includes(space)) {
           poss.push(space);
         }
+        else {
+          this.boundaries.push(space)
+        }
       }
       // up 2 left 1
       if (KBV(rankMap, currpos[0] - 1)) {
         var space = KBV(rankMap, currpos[0] - 1) + (Number(currpos[1]) + 2);
         if (B.freeSpaces.includes(space)) {
           poss.push(space);
+        }
+        else {
+          this.boundaries.push(space)
         }
       }
       // up 1 right 2
@@ -429,12 +473,18 @@ class Knight extends Piece {
         if (B.freeSpaces.includes(space)) {
           poss.push(space);
         }
+        else {
+          this.boundaries.push(space)
+        }
       }
       // up 1 left 2
       if (KBV(rankMap, currpos[0] - 2)) {
         var space = KBV(rankMap, currpos[0] - 2) + (Number(currpos[1]) + 1);
         if (B.freeSpaces.includes(space)) {
           poss.push(space);
+        }
+        else {
+          this.boundaries.push(space)
         }
       }
       // down 1 left 2
@@ -443,12 +493,18 @@ class Knight extends Piece {
         if (B.freeSpaces.includes(space)) {
           poss.push(space);
         }
+        else {
+          this.boundaries.push(space)
+        }
       }
       // down 2 left 1
       if (KBV(rankMap, currpos[0] - 1)) {
         var space = KBV(rankMap, currpos[0] - 1) + Number(currpos[1] - 2);
         if (B.freeSpaces.includes(space)) {
           poss.push(space);
+        }
+        else {
+          this.boundaries.push(space)
         }
       }
       // down 1 right 2
@@ -457,12 +513,18 @@ class Knight extends Piece {
         if (B.freeSpaces.includes(space)) {
           poss.push(space);
         }
+        else {
+          this.boundaries.push(space)
+        }
       }
       // down 2 right 1
       if (KBV(rankMap, currpos[0] + 1)) {
         var space = KBV(rankMap, currpos[0] + 1) + Number(currpos[1] - 2);
         if (B.freeSpaces.includes(space)) {
           poss.push(space);
+        }
+        else {
+          this.boundaries.push(space)
         }
       }
       // add dots
@@ -472,12 +534,30 @@ class Knight extends Piece {
       }
     
   }
+  
+  captureSet(B) {
+    
+    console.log('knight boundary pieces: ' + this.boundaries)
+    for (var i = 0; i < this.boundaries.length; i++) {
+      var tile = this.boundaries[i]
+        if ($('#'+tile).find('.piece')[0]) {
+        var id = $('#'+tile).find('.piece').attr('id')
+        let pc = B.board[id]
+        console.log(pc.id)
+        $("#"+pc.pos).css('color','red')
+        if (pc.color !== this.color) {
+          B.captureSet.push(pc)
+        } 
+      }
+    }
+  }
 }
 
 class Rook extends Piece {
   constructor(tile, color) {
     super(tile, "R", color);
     this.name = "R";
+    this.boundaries = [];
     if (color === "white") {
       this.char = "&#9814;";
     } else if (color === "black") {
@@ -499,6 +579,7 @@ pos = [rankMap[this.pos[0]], this.pos[1]];
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -517,6 +598,7 @@ pos = [rankMap[this.pos[0]], this.pos[1]];
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -534,6 +616,7 @@ pos = [rankMap[this.pos[0]], this.pos[1]];
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -551,6 +634,7 @@ pos = [rankMap[this.pos[0]], this.pos[1]];
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -565,12 +649,29 @@ pos = [rankMap[this.pos[0]], this.pos[1]];
         B.dots.push(poss[i]);
     }
   }
+  
+  captureSet(B) {
+    console.log('rook boundary pieces: ' + this.boundaries)
+    for (var i = 0; i < this.boundaries.length; i++) {
+      var tile = this.boundaries[i]
+        if ($('#'+tile).find('.piece')[0]) {
+        var id = $('#'+tile).find('.piece').attr('id')
+        let pc = B.board[id]
+        console.log(pc.id)
+        $("#"+pc.pos).css('color','red')
+        if (pc.color !== this.color) {
+          B.captureSet.push(pc)
+        } 
+      }
+    }
+  }
 }
 
 class King extends Piece {
   constructor(tile, color) {
     super(tile, "K", color);
     this.name = "K";
+    this.boundaries = []
     if (color === "white") {
       this.char = "&#9812;";
     } else if (color === "black") {
@@ -596,6 +697,7 @@ class King extends Piece {
           break;
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
         }
       }
@@ -616,6 +718,7 @@ class King extends Piece {
           break;
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -636,6 +739,7 @@ class King extends Piece {
           break;
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -656,6 +760,7 @@ class King extends Piece {
           break;
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -675,6 +780,7 @@ class King extends Piece {
           break;
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -695,6 +801,7 @@ class King extends Piece {
           break;
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -714,6 +821,7 @@ class King extends Piece {
           break;
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -733,6 +841,7 @@ class King extends Piece {
           break;
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -747,12 +856,29 @@ class King extends Piece {
         B.dots.push(poss[i]);
     }
   }
+  
+  captureSet(B) {
+    console.log('king boundary pieces: ' + this.boundaries)
+    for (var i = 0; i < this.boundaries.length; i++) {
+      var tile = this.boundaries[i]
+        if ($('#'+tile).find('.piece')[0]) {
+        var id = $('#'+tile).find('.piece').attr('id')
+        let pc = B.board[id]
+        console.log(pc.id)
+        $("#"+pc.pos).css('color','red')
+        if (pc.color !== this.color) {
+          B.captureSet.push(pc)
+        } 
+      }
+    }
+  }
 }
 
 class Queen extends Piece {
   constructor(tile, color) {
     super(tile, "Q", color);
     this.name = "Q";
+    this.boundaries = []
     if (color === "white") {
       this.char = "&#9813;";
     } else if (color === "black") {
@@ -776,6 +902,7 @@ class Queen extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
         }
       }
@@ -794,6 +921,7 @@ class Queen extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -812,6 +940,7 @@ class Queen extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -830,6 +959,7 @@ class Queen extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -847,6 +977,7 @@ class Queen extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -865,6 +996,7 @@ class Queen extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -882,6 +1014,7 @@ class Queen extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -899,6 +1032,7 @@ class Queen extends Piece {
           poss.push(posToTile(pos))
         }
         else {
+          this.boundaries.push(posToTile(pos))
           break;
           pos = [rankMap[this.pos[0]], this.pos[1]];
         }
@@ -914,6 +1048,22 @@ class Queen extends Piece {
     }
   
   }
+  
+  captureSet(B) {
+    console.log('queen boundary pieces: ' + this.boundaries)
+    for (var i = 0; i < this.boundaries.length; i++) {
+      var tile = this.boundaries[i]
+        if ($('#'+tile).find('.piece')[0]) {
+        var id = $('#'+tile).find('.piece').attr('id')
+        let pc = B.board[id]
+        console.log(pc.id)
+        $("#"+pc.pos).css('color','red')
+        if (pc.color !== this.color) {
+          B.captureSet.push(pc)
+        } 
+      }
+    }
+  }
 }
 
 let B = new Chessboard();
@@ -924,15 +1074,7 @@ var currPiece;
 var lastPiece;
 
 $(".tile").hover(function () {
-  //console.log($(this).attr('id'));
-  //console.log($(this).find('.piece').attr('id'));
-  if ($(this).find(".piece")) {
-  }
-});
-
-$(".piece").hover(function () {
-  console.log("piece: " + $(this).find(".piece").attr("id"));
-  //highlightMoves();
+  console.log($(this).attr("id"));
 });
 
 $(".tile").click(function () {
@@ -946,14 +1088,23 @@ $(".tile").click(function () {
       B.deleteDots();
       B.clearCaptureSet();
       console.log(getColor($(this).attr('id')))
-      $(this).find('.piece').css('color',getColor($(this).attr('id')))
+      let cl = getColor(currPiece.pos)  
+      $("#" + lastPiece.pos).css("color", cl);
     }
-  } else {
+  } 
+  else {
     emptyTile = false;
   }
 
   // case: previous piece selected
   if (currPiece && !emptyTile) {
+    if ($(this).find('.piece')[0]) {
+      let id = $(this).find('.piece').attr('id')
+      let pc = B.board[id]
+      if (B.captureSet.includes(pc)) {
+        B.capture(currPiece,pc)
+      }
+    }
     lastPiece = currPiece;
     B.deleteDots();
     B.clearCaptureSet();
@@ -979,6 +1130,8 @@ $(".tile").click(function () {
       console.log("dot here");
       B.deleteDots();
       B.move(currPiece, this.id);
+      let cl = getColor(currPiece.pos)  
+      $("#" + currPiece.pos).css("color", cl);
     }
   }
 
