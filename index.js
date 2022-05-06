@@ -267,18 +267,11 @@ class Piece {
     this.color = color;
   }
   draw() {
-    $("#" + this.pos).append(
-      "<div id = '" +
-        this.type +
-        "_" +
-        this.pos +
-        "' class = 'piece'>" +
-        this.char +
-        "</div>"
-    );
+    $("#" + this.pos).append("<div id = '"+this.type+"_" +this.pos +
+        "' class = 'piece'>"+this.char +"</div>")
   }
-  moveset(B) {
-  }
+  moveset(B) {}
+  captureSet(B) {}
 }
 
 class Pawn extends Piece {
@@ -334,7 +327,6 @@ class Pawn extends Piece {
       }
     }
   }
-
  }
 
  function generateMoveset(pc,B,indices,limited=false) {
@@ -464,19 +456,13 @@ class Queen extends Piece {
     this.name = "Q";
     this.boundaries = []
     this.indices = [[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[0,1],[-1,0],[0,-1]]
+    this.char = {'white':'&#9813;','black':'&#9819;'}[color]
     
-    if (color === "white") {
-      this.char = "&#9813;";
-    } else if (color === "black") {
-      this.char = "&#9819;";
-    }
     this.draw();
   }
-
   moveset(B) {
     generateMoveset(this,B,this.indices)
   }
-
   captureSet(B) {
     generateCaptureSet(this,B);
   }
