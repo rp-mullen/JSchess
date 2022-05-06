@@ -92,25 +92,20 @@ class Chessboard {
     this.board = {};
     // lists all board tiles by name
     this.tileId = [];
+    this.freeSpaces = [];
     // keeps track of spaces open for movement
     this.dots = [];
     // keeps track of pieces open for capture
     this.captureSet = []
-    this.turn = 'white'
-    this.generateTileIDs();
-    // keeps track of unoccupied tiles
-    this.freeSpaces = this.tileId;
-    this.init();
     
-  }
-
-  //                         TILE IDs
-  generateTileIDs() {
     for (var i = 0; i < rank.length; i++) {
       for (var j = 0; j < file.length; j++) {
         this.tileId.push(rank[j] + file[7 - i]);
       }
     }
+        
+    this.init();
+    this.turn = 'white'
   }
 
   //                      MOVE PIECE
@@ -133,14 +128,14 @@ class Chessboard {
     remove(this.freeSpaces, tile);
     // add previous tile to freespaces
     this.freeSpaces.push(pc.pos);
-    delete this.board[pc.name + "_" + pc.pos];
+    delete this.board[pc.type + "_" + pc.pos];
     $("#" + pc.pos).empty();
 
-    var newpiece = pc.name + "_" + tile;
-    this.board[newpiece] = getPiece(pc.name, tile, pc.color);
+    var newpiece = pc.type + "_" + tile;
+    this.board[newpiece] = getPiece(pc.type, tile, pc.color);
 
     // case: pawn opening movement
-    if (this.board[newpiece].name === "p") {
+    if (this.board[newpiece].type === "p") {
       this.board[newpiece].start = false;
     }
     console.log("newpiece: " + this.board[newpiece].id);
@@ -202,6 +197,8 @@ class Chessboard {
 
   //                INITIALIZE BOARD
   init() {
+    this.freeSpaces = this.tileId;
+    
     for (var i = 0; i < this.tileId.length; i++) {
       this.addTile(this.tileId[i], i);
     }
@@ -262,9 +259,9 @@ class Chessboard {
 //-----------------------------------------------------------------------------
 
 class Piece {
-  constructor(tile, name, color) {
-    this.name = name;
-    this.id = this.name + tile;
+  constructor(tile, type, color) {
+    this.type = type;
+    this.id = this.type + tile;
     this.pos = tile;
     this.char = "";
     this.color = color;
@@ -272,7 +269,7 @@ class Piece {
   draw() {
     $("#" + this.pos).append(
       "<div id = '" +
-        this.name +
+        this.type +
         "_" +
         this.pos +
         "' class = 'piece'>" +
@@ -287,14 +284,9 @@ class Piece {
 class Pawn extends Piece {
   constructor(tile, color) {
     super(tile, "p", color);
-    this.name = "p";
     this.start = true;
+    this.char = {'white':'&#9817;','black':'&#9823;'}[color]
 
-    if (color === "white") {
-      this.char = "&#9817;";
-    } else if (color === "black") {
-      this.char = "&#9823;";
-    }
     this.draw();
   }
 
@@ -319,6 +311,7 @@ class Pawn extends Piece {
       }
       this.ready = true;
     }
+  
   captureSet(B) {
     let dir = 1;
     if (this.color === 'black') { dir = -1;}
@@ -344,12 +337,11 @@ class Pawn extends Piece {
 
  }
 
- function generateMoveset(pc,B,indices) {
+ function generateMoveset(pc,B,indices,limited=false) {
     var pos = [rankMap[pc.pos[0]], Number(pc.pos[1])]
     let poss = []
     let boundariesFound = false
 
-    // calculate free up to 4 boundaries (either a piece or end of board)
     for (var i = 0; i < indices.length; i++) {
         while (!boundariesFound) {
             pos[0] += indices[i][0];
@@ -358,6 +350,9 @@ class Pawn extends Piece {
             if (posToTile(pos)) {
                 if(B.freeSpaces.includes(posToTile(pos))) {
                     poss.push(posToTile(pos))
+                    if (limited == true) {
+                      break;
+                    }
                 }
                 else {
                     pc.boundaries.push(posToTile(pos))
@@ -378,406 +373,88 @@ class Pawn extends Piece {
     }
   }
 
+function generateCaptureSet(pc,B) {
+  console.log(pc.id + ' boundary pieces: ' + pc.boundaries)
+  for (var i = 0; i < pc.boundaries.length; i++) {
+    var tile = pc.boundaries[i]
+      if ($('#'+tile).find('.piece')[0]) {
+        var id = $('#'+tile).find('.piece').attr('id')
+        let piece = B.board[id]
+        console.log(pc.id)
+        if (piece.color !== pc.color) {
+          B.captureSet.push(piece)
+          $("#"+piece.pos).css('color','red')
+        }
+      } 
+   }
+}
 
 class Bishop extends Piece {
   constructor(tile, color) {
-    super(tile, "b", color);
-    this.name = "b";
+    super(tile, "b", color);    
     this.indices = [[1,1],[1,-1],[-1,-1],[-1,1]]
     this.boundaries = []
-    if (color === "white") {
-      this.char = "&#9815;";
-    } else if (color === "black") {
-      this.char = "&#9821;";
-    }
+    this.char = {'white':'&#9815;','black':'&#9821;'}[color]
+    
     this.draw();
   }
-
   moveset(B) {
-    generateMoveset(this,B,this.indices)
+    generateMoveset(this,B,this.indices);
   }
-
   captureSet(B) {
-    console.log('bishop boundary pieces: ' + this.boundaries)
-    for (var i = 0; i < this.boundaries.length; i++) {
-      var tile = this.boundaries[i]
-        if ($('#'+tile).find('.piece')[0]) {
-          var id = $('#'+tile).find('.piece').attr('id')
-          let pc = B.board[id]
-          console.log(pc.id)
-          if (pc.color !== this.color) {
-            B.captureSet.push(pc)
-            $("#"+pc.pos).css('color','red')
-        }
-      }
-    }
+    generateCaptureSet(this,B);
   }
 }
 
 class Knight extends Piece {
   constructor(tile, color) {
-    super(tile, "k", color);
-    this.name = "k";
+    super(tile, "k", color);    
     this.boundaries = []
-    if (color === "white") {
-      this.char = "&#9816;";
-    }
-    if (color === "black") {
-      this.char = "&#9822;";
-    }
+    this.indices = [[1,2],[2,1],[-1,-2],[-2,-1],[-1,2],[-2,1],[1,-2],[2,-1]]
+    this.char = {'white':'&#9816;','black':'&#9822;'}[color]
+    
     this.draw();
   }
-
   moveset(B) {
-
-      console.log("knight moving...");
-      var poss = [];
-      var currpos = [rankMap[this.pos[0]],this.pos[1]];
-      // up 2 right 1
-      if (KBV(rankMap, currpos[0] + 1)) {
-        var space = KBV(rankMap, currpos[0] + 1) + (Number(currpos[1]) + 2);
-        if (B.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-        else {
-          this.boundaries.push(space)
-        }
-      }
-      // up 2 left 1
-      if (KBV(rankMap, currpos[0] - 1)) {
-        var space = KBV(rankMap, currpos[0] - 1) + (Number(currpos[1]) + 2);
-        if (B.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-        else {
-          this.boundaries.push(space)
-        }
-      }
-      // up 1 right 2
-      if (KBV(rankMap, currpos[0] + 2)) {
-        var space = KBV(rankMap, currpos[0] + 2) + (Number(currpos[1]) + 1);
-        if (B.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-        else {
-          this.boundaries.push(space)
-        }
-      }
-      // up 1 left 2
-      if (KBV(rankMap, currpos[0] - 2)) {
-        var space = KBV(rankMap, currpos[0] - 2) + (Number(currpos[1]) + 1);
-        if (B.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-        else {
-          this.boundaries.push(space)
-        }
-      }
-      // down 1 left 2
-      if (KBV(rankMap, currpos[0] - 2)) {
-        var space = KBV(rankMap, currpos[0] - 2) + Number(currpos[1] - 1);
-        if (B.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-        else {
-          this.boundaries.push(space)
-        }
-      }
-      // down 2 left 1
-      if (KBV(rankMap, currpos[0] - 1)) {
-        var space = KBV(rankMap, currpos[0] - 1) + Number(currpos[1] - 2);
-        if (B.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-        else {
-          this.boundaries.push(space)
-        }
-      }
-      // down 1 right 2
-      if (KBV(rankMap, currpos[0] + 2)) {
-        var space = KBV(rankMap, currpos[0] + 2) + Number(currpos[1] - 1);
-        if (B.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-        else {
-          this.boundaries.push(space)
-        }
-      }
-      // down 2 right 1
-      if (KBV(rankMap, currpos[0] + 1)) {
-        var space = KBV(rankMap, currpos[0] + 1) + Number(currpos[1] - 2);
-        if (B.freeSpaces.includes(space)) {
-          poss.push(space);
-        }
-        else {
-          this.boundaries.push(space)
-        }
-      }
-      // add dots
-      for (var i = 0; i < poss.length; i++) {
-        $("#" + poss[i]).append(dot);
-        B.dots.push(poss[i]);
-      }
-
+    generateMoveset(this,B,this.indices,true)
   }
-
   captureSet(B) {
-
-    console.log('knight boundary pieces: ' + this.boundaries)
-    for (var i = 0; i < this.boundaries.length; i++) {
-      var tile = this.boundaries[i]
-        if ($('#'+tile).find('.piece')[0]) {
-          var id = $('#'+tile).find('.piece').attr('id')
-          let pc = B.board[id]
-          console.log(pc.id)
-          if (pc.color !== this.color) {
-            B.captureSet.push(pc)
-            $("#"+pc.pos).css('color','red')
-        }
-      }
-    }
+    generateCaptureSet(this,B);
   }
 }
 
 class Rook extends Piece {
   constructor(tile, color) {
     super(tile, "R", color);
-    this.name = "R";
     this.boundaries = [];
     this.indices = [[1,0],[-1,0],[0,1],[0,-1]]
-    if (color === "white") {
-      this.char = "&#9814;";
-    } else if (color === "black") {
-      this.char = "&#9820;";
-    }
+    this.char = {'white':'&#9814;','black':'&#9820;'}[color]
+    
     this.draw();
   }
-
   moveset(B) {
     generateMoveset(this,B,this.indices)
   }
-
   captureSet(B) {
-    console.log('rook boundary pieces: ' + this.boundaries)
-    for (var i = 0; i < this.boundaries.length; i++) {
-      var tile = this.boundaries[i]
-        if ($('#'+tile).find('.piece')[0]) {
-          var id = $('#'+tile).find('.piece').attr('id')
-          let pc = B.board[id]
-          console.log(pc.id)
-          if (pc.color !== this.color) {
-            B.captureSet.push(pc)
-            $("#"+pc.pos).css('color','red')
-        }
-      }
-    }
+    generateCaptureSet(this,B);
   }
+  
 }
 
 class King extends Piece {
   constructor(tile, color) {
     super(tile, "K", color);
-    this.name = "K";
     this.boundaries = []
-    if (color === "white") {
-      this.char = "&#9812;";
-    } else if (color === "black") {
-      this.char = "&#9818;";
-    }
+    this.indices = [[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[0,1],[-1,0],[0,-1]]
+    this.char = {'white':'&#9812;','black':'&#9818;'}[color]
+    
     this.draw();
   }
-
   moveset(B) {
-    var currpos = [rankMap[this.pos[0]], this.pos[1]]
-    let poss = []
-    let boundariesFound = 0
-    let pos = currpos
-
-    // calculate free up to 4 boundaries (either a piece or end of board)
-    while (boundariesFound !== 1) {
-      pos[0]++;
-      pos[1]++;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos));
-          boundariesFound++;
-          break;
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 2) {
-      pos[0]--;
-      pos[1]++;
-      console.log(this.pos+' '+pos)
-      console.log(posToTile(pos))
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-          boundariesFound++;
-          break;
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 3) {
-      pos[0]++;
-      pos[1]--;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-          boundariesFound++;
-          break;
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 4) {
-      pos[0]--;
-      pos[1]--;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-          boundariesFound++;
-          break;
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 5) {
-      pos[0]++;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-          boundariesFound++;
-          break;
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 6) {
-      pos[0]--;
-
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-          boundariesFound++;
-          break;
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 7) {
-      pos[1]++;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-          boundariesFound++;
-          break;
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 8) {
-      pos[1]--;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-          boundariesFound++;
-          break;
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    for (var i = 0; i < poss.length; i++) {
-      $("#" + poss[i]).append(dot);
-        B.dots.push(poss[i]);
-    }
+    generateMoveset(this,B,this.indices,true)
   }
-
   captureSet(B) {
-    console.log('king boundary pieces: ' + this.boundaries)
-    for (var i = 0; i < this.boundaries.length; i++) {
-      var tile = this.boundaries[i]
-        if ($('#'+tile).find('.piece')[0]) {
-          var id = $('#'+tile).find('.piece').attr('id')
-          let pc = B.board[id]
-          console.log(pc.id)
-          if (pc.color !== this.color) {
-            B.captureSet.push(pc)
-            $("#"+pc.pos).css('color','red')
-          }
-        }
-      }
+    generateCaptureSet(this,B);
   }
 }
 
@@ -787,6 +464,7 @@ class Queen extends Piece {
     this.name = "Q";
     this.boundaries = []
     this.indices = [[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[0,1],[-1,0],[0,-1]]
+    
     if (color === "white") {
       this.char = "&#9813;";
     } else if (color === "black") {
@@ -800,19 +478,7 @@ class Queen extends Piece {
   }
 
   captureSet(B) {
-    console.log('queen boundary pieces: ' + this.boundaries)
-    for (var i = 0; i < this.boundaries.length; i++) {
-      var tile = this.boundaries[i]
-        if ($('#'+tile).find('.piece')[0]) {
-          var id = $('#'+tile).find('.piece').attr('id')
-          let pc = B.board[id]
-          console.log(pc.id)
-          if (pc.color !== this.color) {
-            B.captureSet.push(pc)
-            $("#"+pc.pos).css('color','red')
-        }
-      }
-    }
+    generateCaptureSet(this,B);
   }
 }
 
