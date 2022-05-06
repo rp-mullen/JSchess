@@ -12,7 +12,7 @@ function remove(arr, e) {
     arr.splice(index, 1);
   }
 }
-
+// get text color for each tile
 function getColor(tile) {
   let cl;
     if (
@@ -26,11 +26,11 @@ function getColor(tile) {
   return cl;
 }
 
-// key by value
+// get object key by value
 function KBV(object, value) {
   return Object.keys(object).find((key) => object[key] === value);
 }
-
+// generate peice
 function getPiece(type, tile, color) {
   if (type === "p") {
     return new Pawn(tile, color);
@@ -51,24 +51,57 @@ function getPiece(type, tile, color) {
     return new Queen(tile, color);
   }
 }
-
+// convert [x,y] to tile name (i.e. [2,3]->'B3')
 function posToTile(pos) {
   return KBV(rankMap,pos[0])+pos[1]
 }
 
+//------------------------------------------------------
+class Game {
+  constructor() {
+    this.B = new Chessboard()
+    this.checkMate = false;
+    this.check = false;
+    this.turn = 'white'
+    
+    this.run();
+  }
+  
+  run() {
+    while (!checkMate) {
+      if (this.turn === 'white') {
+        this.B.enableMove('white')
+        if (this.B.moveMade()) {
+          this.turn = 'black';
+        }
+      }
+      else {
+        this.B.enableMove('black')
+        if (this.B.moveMade()) {
+          this.turn = 'white'
+        }
+      }
+    }
+  }
+}
+
+//                    CHESSBOARD CLASS
 class Chessboard {
   constructor() {
+    // keeps track of active pieces
     this.board = {};
+    // lists all board tiles by name
     this.tileId = [];
+    // keeps track of spaces open for movement
     this.dots = [];
+    // keeps track of pieces open for capture
     this.captureSet = []
-
+    this.turn = 'white'
     this.generateTileIDs();
-
+    // keeps track of unoccupied tiles
     this.freeSpaces = this.tileId;
-
     this.init();
-    console.log(this.freeSpaces);
+    
   }
 
   //                         TILE IDs
@@ -82,9 +115,17 @@ class Chessboard {
 
   //                      MOVE PIECE
   moveReady(pc) {
-    $("#" + pc.pos).css("color", "red");
-    pc.moveset(this)
-    pc.captureSet(this)
+    if (pc.color === this.turn) {
+      
+      $("#" + pc.pos).css("color", "red");
+      // show tiles available for movement
+      pc.moveset(this)
+      // show pieces available for capture
+      pc.captureSet(this)
+      console.log(this.captureSet)
+      if (this.captureSet.includes('K')) {       
+      }
+    }
   }
 
   move(pc, tile) {
@@ -96,18 +137,24 @@ class Chessboard {
     $("#" + pc.pos).empty();
 
     var newpiece = pc.name + "_" + tile;
-
     this.board[newpiece] = getPiece(pc.name, tile, pc.color);
 
-    // eliminate pawn starting conditions
+    // case: pawn opening movement
     if (this.board[newpiece].name === "p") {
       this.board[newpiece].start = false;
     }
     console.log("newpiece: " + this.board[newpiece].id);
-    $('#'+tile).css('color',getColor(tile))
+    //$('#'+tile).css('color',getColor(tile))
+    if (pc.color === 'white') {
+      this.turn = 'black';
+    }
+    else {
+      this.turn = 'white';
+    }
 
   }
-
+  
+  //             CAPTURE PIECE
   capture(atkr,captive) {
     console.log(atkr.id + ' captures ' + captive.id + '!')
     $("#"+captive.pos).empty()
@@ -116,12 +163,12 @@ class Chessboard {
     delete this.board[captive.id]
     this.deleteDots()
     this.clearCaptureSet();
-
   }
 
-  //                    ADD TILE SQUARES
+  //                   ADD TILES
   addTile(id, i) {
     var color;
+    var colorMap = {'black':'rgb(112,102,119)','white':'rgb(204,183,174)'}
     if (((id.charAt(1) - i) % 8) % 2 === 0) {
       color = "white";
     } else {
@@ -129,12 +176,14 @@ class Chessboard {
     }
     var tile = "<div class='tile' id='" + id + "'> </div>";
     $(".grid-container").append(tile);
-    $("#" + id).css("background-color", color);
-    if (color === "black") {
+    $("#" + id).css("background-color", colorMap[color]);
+    /*if (color === "black") {
       $("#" + id).css("color", "white");
     }
+    */
   }
-
+  
+  //              CLEAR MOVEMENT DOTS
   deleteDots() {
     for (var i = 0; i < this.dots.length; i++) {
       var dot = this.dots[i];
@@ -142,7 +191,7 @@ class Chessboard {
     }
     this.dots = [];
   }
-
+  //              CLEAR CAPTURABLE PIECES
   clearCaptureSet() {
     for (var i = 0; i < this.captureSet.length; i++) {
       let tile = this.captureSet[i].pos
@@ -151,7 +200,7 @@ class Chessboard {
     this.captureSet = [];
   }
 
-  //                      INITIALIZE
+  //                INITIALIZE BOARD
   init() {
     for (var i = 0; i < this.tileId.length; i++) {
       this.addTile(this.tileId[i], i);
@@ -409,7 +458,6 @@ class Bishop extends Piece {
           if (pc.color !== this.color) {
             B.captureSet.push(pc)
             $("#"+pc.pos).css('color','red')
-
         }
       }
     }
@@ -1094,10 +1142,11 @@ $(".tile").click(function () {
       if (B.captureSet.includes(pc)) {
         B.capture(currPiece,pc)
         cap = true;
-        //B.deleteDots();
-        //B.clearCaptureSet();
+        B.deleteDots();
+        B.clearCaptureSet();
       }
     }
+    B.deleteDots()
     lastPiece = currPiece;
 
     let lastPieceId = lastPiece.name + "_" + lastPiece.pos;
