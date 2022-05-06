@@ -344,11 +344,46 @@ class Pawn extends Piece {
 
  }
 
+ function generateMoveset(pc,B,indices) {
+    var pos = [rankMap[pc.pos[0]], Number(pc.pos[1])]
+    let poss = []
+    let boundariesFound = false
+
+    // calculate free up to 4 boundaries (either a piece or end of board)
+    for (var i = 0; i < indices.length; i++) {
+        while (!boundariesFound) {
+            pos[0] += indices[i][0];
+            pos[1] += indices[i][1];
+            console.log(i + ' : ' + pos)
+            if (posToTile(pos)) {
+                if(B.freeSpaces.includes(posToTile(pos))) {
+                    poss.push(posToTile(pos))
+                }
+                else {
+                    pc.boundaries.push(posToTile(pos))
+                    break;
+                }
+            }
+            else {
+                boundariesFound = true;
+            }
+        }
+        pos = [rankMap[pc.pos[0]], Number(pc.pos[1])];
+        boundariesFound = false;
+    }
+    
+    for (var i = 0; i < poss.length; i++) {
+      $("#" + poss[i]).append(dot);
+        B.dots.push(poss[i]);
+    }
+  }
+
 
 class Bishop extends Piece {
   constructor(tile, color) {
     super(tile, "b", color);
     this.name = "b";
+    this.indices = [[1,1],[1,-1],[-1,-1],[-1,1]]
     this.boundaries = []
     if (color === "white") {
       this.char = "&#9815;";
@@ -359,92 +394,7 @@ class Bishop extends Piece {
   }
 
   moveset(B) {
-    var currpos = [rankMap[this.pos[0]], this.pos[1]]
-    let poss = []
-    let boundariesFound = 0
-    let pos = currpos
-
-    // calculate free up to 4 boundaries (either a piece or end of board)
-    while (boundariesFound !== 1) {
-      pos[0]++;
-      pos[1]++;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 2) {
-      pos[0]--;
-      pos[1]++;
-      console.log(this.pos+' '+pos)
-      console.log(posToTile(pos))
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 3) {
-      pos[0]++;
-      pos[1]--;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 4) {
-      pos[0]--;
-      pos[1]--;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-
-    for (var i = 0; i < poss.length; i++) {
-      $("#" + poss[i]).append(dot);
-        B.dots.push(poss[i]);
-    }
+    generateMoveset(this,B,this.indices)
   }
 
   captureSet(B) {
@@ -594,6 +544,7 @@ class Rook extends Piece {
     super(tile, "R", color);
     this.name = "R";
     this.boundaries = [];
+    this.indices = [[1,0],[-1,0],[0,1],[0,-1]]
     if (color === "white") {
       this.char = "&#9814;";
     } else if (color === "black") {
@@ -603,87 +554,7 @@ class Rook extends Piece {
   }
 
   moveset(B) {
-    var currpos = [rankMap[this.pos[0]], this.pos[1]]
-    let poss = []
-    let boundariesFound = 0
-    let pos = currpos
-pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 5) {
-      pos[0]++;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 6) {
-      pos[0]--;
-
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 7) {
-      pos[1]++;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 8) {
-      pos[1]--;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    for (var i = 0; i < poss.length; i++) {
-      $("#" + poss[i]).append(dot);
-        B.dots.push(poss[i]);
-    }
+    generateMoveset(this,B,this.indices)
   }
 
   captureSet(B) {
@@ -915,6 +786,7 @@ class Queen extends Piece {
     super(tile, "Q", color);
     this.name = "Q";
     this.boundaries = []
+    this.indices = [[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[0,1],[-1,0],[0,-1]]
     if (color === "white") {
       this.char = "&#9813;";
     } else if (color === "black") {
@@ -924,165 +796,7 @@ class Queen extends Piece {
   }
 
   moveset(B) {
-    var currpos = [rankMap[this.pos[0]], this.pos[1]]
-    let poss = []
-    let boundariesFound = 0
-    let pos = currpos
-
-    // calculate free up to 4 boundaries (either a piece or end of board)
-    while (boundariesFound !== 1) {
-      pos[0]++;
-      pos[1]++;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 2) {
-      pos[0]--;
-      pos[1]++;
-      console.log(this.pos+' '+pos)
-      console.log(posToTile(pos))
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 3) {
-      pos[0]++;
-      pos[1]--;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 4) {
-      pos[0]--;
-      pos[1]--;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 5) {
-      pos[0]++;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 6) {
-      pos[0]--;
-
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 7) {
-      pos[1]++;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    pos = [rankMap[this.pos[0]], this.pos[1]];
-    while (boundariesFound !== 8) {
-      pos[1]--;
-      if (posToTile(pos)) {
-        if(B.freeSpaces.includes(posToTile(pos))) {
-          poss.push(posToTile(pos))
-        }
-        else {
-          this.boundaries.push(posToTile(pos))
-          break;
-          pos = [rankMap[this.pos[0]], this.pos[1]];
-        }
-      }
-      else {
-        boundariesFound++;
-      }
-    }
-
-    for (var i = 0; i < poss.length; i++) {
-      $("#" + poss[i]).append(dot);
-        B.dots.push(poss[i]);
-    }
-
+    generateMoveset(this,B,this.indices)
   }
 
   captureSet(B) {
