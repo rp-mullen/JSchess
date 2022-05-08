@@ -80,6 +80,8 @@ class Chessboard {
     this.check = false;
     this.defenders = []
 
+    this.imaginaryTile
+
     for (var i = 0; i < rank.length; i++) {
       for (var j = 0; j < file.length; j++) {
         this.tileId.push(rank[j] + file[7 - i]);
@@ -140,7 +142,7 @@ class Chessboard {
 
   }
 
-  getDefenders() {
+  getCheckDefenders() {
     var defs = []
     var keys = Object.keys(this.board)
     var defPieces = []
@@ -169,44 +171,49 @@ class Chessboard {
             defs.push(pc);
           }
         }
-        this.deleteDots()
-        this.clearCaptureSet()
+        this.clear();
       }
     }
     console.log('defenders: ' + defs)
     this.defenders = defs
   }
 
+  checkPin(pc) {
+    // in-between lookup
+  }
+
   //                      MOVE PIECE
   readyPiece(pc) {
     if (pc.color === this.turn) {
       if (!this.check) {
-        $("#" + pc.pos).css("color", "red");
-        // show tiles available for movement
-        pc.moveset(this)
-        // show pieces available for capture
-        pc.captureSet(this)
-        console.log(this.captureSet)
+        //if (!this.checkPin(pc)) {
+          $("#" + pc.pos).css("color", "red");
+          // show tiles available for movement
+          pc.moveset(this)
+          // show pieces available for capture
+          pc.captureSet(this)
+          console.log(this.captureSet)
+
+
       }
       else if (this.check) {
         console.log('check defenders: '+this.defenders)
         $("#" + pc.pos).css("color", "red");
         pc.moveset(this)
         pc.captureSet(this)
-        var smth = this.dotsBetweenCheck();
+
+        var DBC = this.dotsBetweenCheck();
         if (pc.type !== 'K') {
           for (var i = 0; i < this.dots.length; i++) {
-            if (!smth.includes(this.dots[i])) {
+            if (!DBC.includes(this.dots[i])) {
               $('#'+this.dots[i]).empty()
-              remove(this.dots,this.dots[i]);
             }
           }
         }
         else if (pc.type === 'K') {
-          for (var i = 0; i < smth.length; i++) {
-            if (this.dots.includes(smth[i])) {
-              $('#'+smth[i]).empty()
-              remove(this.dots,smth[i]);
+          for (var i = 0; i < DBC.length; i++) {
+            if (this.dots.includes(DBC[i])) {
+              $('#'+DBC[i]).empty()
             }
           }
         }
@@ -235,23 +242,25 @@ class Chessboard {
 
     var np = this.board[newpiece]
     console.log(np.id + ' ' + np.color)
-    var king = this.getKing(oppColor[this.board[newpiece].color]);
+    var oppKingKey = this.getKing(oppColor[this.board[newpiece].color]);
+    var thisKingKey = this.getKing(this.turn)
 
-    // check if this move puts the opposing player in check
+
     if (!this.check) {
-      this.readyPiece(np);
 
-      if (this.captureSet.includes(this.board[king])) {
+      this.readyPiece(np);
+      if (this.captureSet.includes(this.board[oppKingKey])) {
         this.check = true;
         this.checkingPiece = this.board[newpiece]
-        this.getDefenders()
+        this.getCheckDefenders()
         console.log('check!')
         console.log('checking piece: '+this.checkingPiece.id)
       }
+
     }
     else if (this.check) {
       this.readyPiece(np);
-      if (!this.captureSet.includes(this.board[king])) {
+      if (!this.captureSet.includes(this.board[oppKingKey])) {
         this.check = false;
         this.checkingPiece = '0'
         console.log('out of check!')
@@ -260,8 +269,7 @@ class Chessboard {
 
     // revert colors and clear the dots and capture set
     $('#'+np.pos).css('color','black')
-    this.deleteDots();
-    this.clearCaptureSet();
+    this.clear();
 
     // log move to the moves list
     var move = this.board[newpiece].id
@@ -293,11 +301,12 @@ class Chessboard {
     $("#"+captive.pos).empty()
     $("#"+captive.pos).css('color','black')
 
-    this.move(atkr,captive.pos)
+    if (!this.checkPin(atkr)) {
+      this.move(atkr,captive.pos)
+    }
 
     delete this.board[captive.id]
-    this.deleteDots()
-    this.clearCaptureSet();
+    this.clear();
   }
 
   //                   ADD TILES
@@ -329,6 +338,11 @@ class Chessboard {
       $('#'+tile).css('color','black');
     }
     this.captureSet = [];
+  }
+
+  clear() {
+    this.deleteDots();
+    this.clearCaptureSet();
   }
 
   getKing(color) {
@@ -621,9 +635,11 @@ let B = new Chessboard();
 var currPiece;
 var lastPiece;
 
+/*
 $(".tile").hover(function () {
   console.log($(this).attr("id"));
 });
+*/
 
 $(".tile").click(function () {
   // check if the clicked tile is empty
@@ -635,10 +651,11 @@ $(".tile").click(function () {
     if(currPiece){
       $("#" + currPiece.pos).css("color", 'black');
     }
-    if (!B.dots.includes($(this).attr('id'))) {
-      B.deleteDots();
-      B.clearCaptureSet();
-      $("#" + currPiece.pos).css("color", 'black');
+    if (B.dots.length !== 0) {
+      if (!B.dots.includes($(this).attr('id'))) {
+        B.clear();
+        $("#" + currPiece.pos).css("color", 'black');
+      }
     }
   }
   else {
@@ -653,8 +670,7 @@ $(".tile").click(function () {
       if (B.captureSet.includes(pc)) {
         B.capture(currPiece,pc)
         cap = true;
-        B.deleteDots();
-        B.clearCaptureSet();
+        B.clear();
       }
     }
     B.deleteDots()
@@ -671,7 +687,6 @@ $(".tile").click(function () {
   // if you've clicked a piece then an empty tile
   if (currPiece && emptyTile) {
     if (B.dots.includes(this.id)) {
-      console.log("piece then tile");
       B.deleteDots();
       B.move(currPiece, this.id);
     }
