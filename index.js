@@ -1,9 +1,9 @@
 var rank = ["A", "B", "C", "D", "E", "F", "G", "H"];
 var file = ["1", "2", "3", "4", "5", "6", "7", "8"];
-
+var oppColor = {'white':'black','black':'white'}
 const rankMap = { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8 };
 const dot =
-  "<svg height='80' width='70'><circle cx='48' cy='50' r='9' fill='red'/></svg>";
+  "<svg height='80' width='70'><circle cx='48' cy='50' r='7' fill='red'/></svg>";
 
 // helper function: remove item from array by value
 function remove(arr, e) {
@@ -56,6 +56,10 @@ function posToTile(pos) {
   return KBV(rankMap,pos[0])+pos[1]
 }
 
+function tileToPos(tile) {
+  return [rankMap[tile[0]],Number(tile[1])]
+}
+
 //-----------------------------------------------------------
 //                    CHESSBOARD CLASS
 class Chessboard {
@@ -69,31 +73,145 @@ class Chessboard {
     this.dots = [];
     // keeps track of pieces open for capture
     this.captureSet = []
-    
+
     this.moves = []
     this.moveCount = 0
-    
+
+    this.check = false;
+    this.defenders = []
+
     for (var i = 0; i < rank.length; i++) {
       for (var j = 0; j < file.length; j++) {
         this.tileId.push(rank[j] + file[7 - i]);
       }
     }
-        
+
     this.init();
     this.turn = 'white'
   }
 
-  //                      MOVE PIECE
-  moveReady(pc) {
-    if (pc.color === this.turn) {
-      
-      $("#" + pc.pos).css("color", "red");
-      // show tiles available for movement
+  dotsBetweenCheck() {
+    var atkPos = tileToPos(this.checkingPiece.pos)
+    var kingPos = tileToPos(this.board[this.getKing(oppColor[this.checkingPiece.color])].pos)
+    var dist = [atkPos[0]-kingPos[0],atkPos[1]-kingPos[1]]
+    console.log('check dist: '+dist)
+    var res = []
+
+    if (Math.abs(dist[0]) !== Math.abs(dist[1]) && this.checkingPiece.type === 'k' ){
+      return res
+    }
+    else {
+      let stepsX;
+      let stepsY;
+      let Nsteps;
+      if (Math.abs(dist[0]) >= Math.abs(dist[1])) {
+        Nsteps = Math.abs(dist[0]);
+      }
+      else if (dist[0] === 0 && dist[1] === 0) {
+        Nsteps = 0;
+      }
+      else {
+        Nsteps = Math.abs(dist[1]);
+      }
+
+      if (dist[0] === 0) {
+        stepsX = 0;
+      } else {
+        stepsX = dist[0] / Math.abs(dist[0])
+      }
+
+      if (dist[1] === 0) {
+        stepsY = 0;
+      } else {
+        stepsY = dist[1] / Math.abs(dist[1])
+      }
+
+      console.log('steps: '+ '['+stepsX + ',' + stepsY+']')
+      if (Nsteps > 0) {
+        for (var i = 0; i < Nsteps-1; i++) {
+          kingPos[0] += stepsX
+          kingPos[1] += stepsY
+          console.log('between check: '+posToTile(kingPos));
+          res.push(posToTile(kingPos))
+        }
+      }
+    }
+    return res
+
+  }
+
+  getDefenders() {
+    var defs = []
+    var keys = Object.keys(this.board)
+    var defPieces = []
+    for (let j of keys) {
+      if (this.board[j].color === this.turn) {
+        defPieces.push(j)
+      }
+    }
+    var dbc = this.dotsBetweenCheck()
+    console.log('dbc: '+dbc)
+
+    for (var i = 0; i < defPieces.length; i++) {
+
+      let pc = this.board[defPieces[i]]
+
       pc.moveset(this)
-      // show pieces available for capture
       pc.captureSet(this)
-      console.log(this.captureSet)
-      if (this.captureSet.includes('K')) {       
+
+      if (this.captureSet.includes(this.checkingPiece)) {
+        defs.push(pc);
+      }
+
+      if (pc.type !== 'K') {
+        for (let i of this.dots) {
+          if (dbc.includes(i)) {
+            defs.push(pc);
+          }
+        }
+        this.deleteDots()
+        this.clearCaptureSet()
+      }
+    }
+    console.log('defenders: ' + defs)
+    this.defenders = defs
+  }
+
+  //                      MOVE PIECE
+  readyPiece(pc) {
+    if (pc.color === this.turn) {
+      if (!this.check) {
+        $("#" + pc.pos).css("color", "red");
+        // show tiles available for movement
+        pc.moveset(this)
+        // show pieces available for capture
+        pc.captureSet(this)
+        console.log(this.captureSet)
+      }
+      else if (this.check) {
+        console.log('check defenders: '+this.defenders)
+        $("#" + pc.pos).css("color", "red");
+        pc.moveset(this)
+        pc.captureSet(this)
+        var smth = this.dotsBetweenCheck();
+        if (pc.type !== 'K') {
+          for (var i = 0; i < this.dots.length; i++) {
+            if (!smth.includes(this.dots[i])) {
+              $('#'+this.dots[i]).empty()
+              remove(this.dots,this.dots[i]);
+            }
+          }
+        }
+        else if (pc.type === 'K') {
+          for (var i = 0; i < smth.length; i++) {
+            if (this.dots.includes(smth[i])) {
+              $('#'+smth[i]).empty()
+              remove(this.dots,smth[i]);
+            }
+          }
+        }
+
+        console.log(this.captureSet)
       }
     }
   }
@@ -114,8 +232,42 @@ class Chessboard {
     if (this.board[newpiece].type === "p") {
       this.board[newpiece].start = false;
     }
-    
+
+    var np = this.board[newpiece]
+    console.log(np.id + ' ' + np.color)
+    var king = this.getKing(oppColor[this.board[newpiece].color]);
+
+    // check if this move puts the opposing player in check
+    if (!this.check) {
+      this.readyPiece(np);
+
+      if (this.captureSet.includes(this.board[king])) {
+        this.check = true;
+        this.checkingPiece = this.board[newpiece]
+        this.getDefenders()
+        console.log('check!')
+        console.log('checking piece: '+this.checkingPiece.id)
+      }
+    }
+    else if (this.check) {
+      this.readyPiece(np);
+      if (!this.captureSet.includes(this.board[king])) {
+        this.check = false;
+        this.checkingPiece = '0'
+        console.log('out of check!')
+      }
+    }
+
+    // revert colors and clear the dots and capture set
+    $('#'+np.pos).css('color','black')
+    this.deleteDots();
+    this.clearCaptureSet();
+
+    // log move to the moves list
     var move = this.board[newpiece].id
+    if (this.check) {
+      move += '+'
+    }
     if (this.moveCount % 2 == 0 && this.movecount !== 0) {
       this.moves.push(move)
     }
@@ -123,26 +275,26 @@ class Chessboard {
       this.moves[this.moves.length-1] += ' ' + move
     }
     this.moveCount++;
-    
+    console.log('moves:' + this.moves )
+
+    // switch the player turns
     if (pc.color === 'white') {
       this.turn = 'black';
     }
     else {
       this.turn = 'white';
     }
-    
-    console.log('moves:' + this.moves )
   }
-  
+
   //             CAPTURE PIECE
   capture(atkr,captive) {
     console.log(atkr.id + ' captures ' + captive.id + '!')
-    
+
     $("#"+captive.pos).empty()
     $("#"+captive.pos).css('color','black')
-    
+
     this.move(atkr,captive.pos)
-    
+
     delete this.board[captive.id]
     this.deleteDots()
     this.clearCaptureSet();
@@ -151,7 +303,7 @@ class Chessboard {
   //                   ADD TILES
   addTile(id, i) {
     var color;
-    var colorMap = {'black':'rgb(71, 64, 77)','white':'rgb(235, 204, 52)'}
+    var colorMap = {'black':'rgb(118,150,86)','white':'rgb(238,238,210)'}
     if (((id.charAt(1) - i) % 8) % 2 === 0) {
       color = "white";
     } else {
@@ -161,7 +313,7 @@ class Chessboard {
     $(".grid-container").append(tile);
     $("#" + id).css("background-color", colorMap[color]);
   }
-  
+
   //              CLEAR MOVEMENT DOTS
   deleteDots() {
     for (var i = 0; i < this.dots.length; i++) {
@@ -179,10 +331,20 @@ class Chessboard {
     this.captureSet = [];
   }
 
+  getKing(color) {
+    var keys = Object.keys(this.board);
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i]
+      if (this.board[key].type === 'K' && this.board[key].color === color) {
+        return key;
+      }
+    }
+  }
+
   //                INITIALIZE BOARD
   init() {
     this.freeSpaces = this.tileId;
-    
+
     for (var i = 0; i < this.tileId.length; i++) {
       this.addTile(this.tileId[i], i);
     }
@@ -288,7 +450,7 @@ class Pawn extends Piece {
       }
       this.ready = true;
     }
-  
+
   captureSet(B) {
     let dir = 1;
     if (this.color === 'black') { dir = -1;}
@@ -322,7 +484,7 @@ class Pawn extends Piece {
         while (!boundariesFound) {
             pos[0] += indices[i][0];
             pos[1] += indices[i][1];
-            console.log(i + ' : ' + pos)
+            //console.log(i + ' : ' + pos)
             if (posToTile(pos)) {
                 if(B.freeSpaces.includes(posToTile(pos))) {
                     poss.push(posToTile(pos))
@@ -342,7 +504,7 @@ class Pawn extends Piece {
         pos = [rankMap[pc.pos[0]], Number(pc.pos[1])];
         boundariesFound = false;
     }
-    
+
     for (var i = 0; i < poss.length; i++) {
       $("#" + poss[i]).append(dot);
         B.dots.push(poss[i]);
@@ -361,17 +523,17 @@ function generateCaptureSet(pc,B) {
           B.captureSet.push(piece)
           $("#"+piece.pos).css('color','red')
         }
-      } 
+      }
    }
 }
 
 class Bishop extends Piece {
   constructor(tile, color) {
-    super(tile, "b", color);    
+    super(tile, "b", color);
     this.indices = [[1,1],[1,-1],[-1,-1],[-1,1]]
     this.boundaries = []
     this.char = {'white':'&#9815;','black':'&#9821;'}[color]
-    
+
     this.draw();
   }
   moveset(B) {
@@ -384,11 +546,11 @@ class Bishop extends Piece {
 
 class Knight extends Piece {
   constructor(tile, color) {
-    super(tile, "k", color);    
+    super(tile, "k", color);
     this.boundaries = []
     this.indices = [[1,2],[2,1],[-1,-2],[-2,-1],[-1,2],[-2,1],[1,-2],[2,-1]]
     this.char = {'white':'&#9816;','black':'&#9822;'}[color]
-    
+
     this.draw();
   }
   moveset(B) {
@@ -405,7 +567,7 @@ class Rook extends Piece {
     this.boundaries = [];
     this.indices = [[1,0],[-1,0],[0,1],[0,-1]]
     this.char = {'white':'&#9814;','black':'&#9820;'}[color]
-    
+
     this.draw();
   }
   moveset(B) {
@@ -414,7 +576,7 @@ class Rook extends Piece {
   captureSet(B) {
     generateCaptureSet(this,B);
   }
-  
+
 }
 
 class King extends Piece {
@@ -423,7 +585,7 @@ class King extends Piece {
     this.boundaries = []
     this.indices = [[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[0,1],[-1,0],[0,-1]]
     this.char = {'white':'&#9812;','black':'&#9818;'}[color]
-    
+
     this.draw();
   }
   moveset(B) {
@@ -441,7 +603,7 @@ class Queen extends Piece {
     this.boundaries = []
     this.indices = [[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[0,1],[-1,0],[0,-1]]
     this.char = {'white':'&#9813;','black':'&#9819;'}[color]
-    
+
     this.draw();
   }
   moveset(B) {
@@ -501,9 +663,9 @@ $(".tile").click(function () {
     let lastPieceId = lastPiece.name + "_" + lastPiece.pos;
     console.log("last piece: " + lastPieceId);
     console.log("curr piece: " + currPiece.id)
-    
+
     $("#" + lastPiece.pos).css("color", 'black');
-  
+
   }
 
   // if you've clicked a piece then an empty tile
@@ -525,7 +687,7 @@ $(".tile").click(function () {
       currPiece = B.board[id];
       console.log(currPiece);
       if (cap !== true) {
-        B.moveReady(currPiece);
+        B.readyPiece(currPiece);
       }
       else {
         cap = false;
