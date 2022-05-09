@@ -2,6 +2,7 @@ var rank = ["A", "B", "C", "D", "E", "F", "G", "H"];
 var file = ["1", "2", "3", "4", "5", "6", "7", "8"];
 var oppColor = {'white':'black','black':'white'}
 const rankMap = { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8 };
+var pinners = ['Q','b','R']
 const dot =
   "<svg height='80' width='70'><circle cx='48' cy='50' r='7' fill='red'/></svg>";
 
@@ -79,9 +80,10 @@ class Chessboard {
 
     this.check = false;
     this.defenders = []
-
-    this.imaginaryTile
-
+  
+    this.pinned = []
+    this.pins = {}
+    
     for (var i = 0; i < rank.length; i++) {
       for (var j = 0; j < file.length; j++) {
         this.tileId.push(rank[j] + file[7 - i]);
@@ -178,10 +180,52 @@ class Chessboard {
     this.defenders = defs
   }
 
-  checkPin(pc) {
-    // in-between lookup
-  }
-
+  
+ checkPin(pc) {
+    var pos = [rankMap[pc.pos[0]], Number(pc.pos[1])]
+    let boundariesFound = false
+    // go through indices. add pieces to an array along each index
+    // and dump the array into an empty one unless it includes the
+    // opposite colored king
+   var oppKingKey = this.getKing(oppColor[pc.color])
+   var oppKing = this.board[oppKingKey]
+   var res = []
+    for (var i = 0; i < pc.indices.length; i++) {
+        while (!boundariesFound) {
+            pos[0] += pc.indices[i][0];
+            pos[1] += pc.indices[i][1];
+            if (posToTile(pos)) {
+              let tile = posToTile(pos)
+                if($("#"+tile).find('.piece')[0]) {
+                  var id = $('#'+tile).find('.piece').attr('id')
+        let piece = this.board[id]
+                    res.push(this.board[id])
+                }
+            }
+            else {
+                boundariesFound = true;
+                break;
+            }
+        }
+        pos = [rankMap[pc.pos[0]], Number(pc.pos[1])];
+        boundariesFound = false;
+        if (!res.includes(oppKing)) {
+            res = []
+        }
+      else {
+        remove(res,oppKing);
+        if (res.length > 1) {
+          res = []
+        }
+      }      
+     }
+    
+   for (var i = 0; i < res.length; i++) {
+     console.log('pinned: '+res[i].id)
+   }
+   this.pinned.push(res[0])
+   this.pins[res[0]] = pc
+}
   //                      MOVE PIECE
   readyPiece(pc) {
     if (pc.color === this.turn) {
@@ -192,9 +236,10 @@ class Chessboard {
           pc.moveset(this)
           // show pieces available for capture
           pc.captureSet(this)
-          console.log(this.captureSet)
-
-
+          
+          if (this.pinned.includes(pc)) {
+            this.clear();
+          }
       }
       else if (this.check) {
         console.log('check defenders: '+this.defenders)
@@ -256,7 +301,18 @@ class Chessboard {
         console.log('check!')
         console.log('checking piece: '+this.checkingPiece.id)
       }
-
+      if (pinners.includes(np.type)) {
+        console.log('checking for pin...')
+        this.checkPin(np,np.indices);
+      }
+      /*
+      // check if pinned pieces are still pinned
+      if (this.pinned.length > 0) {
+        for (let p in this.pinned) {
+          this.checkPin(this.pins[p])
+        }
+      }
+      */
     }
     else if (this.check) {
       this.readyPiece(np);
@@ -276,7 +332,7 @@ class Chessboard {
     if (this.check) {
       move += '+'
     }
-    if (this.moveCount % 2 == 0 && this.movecount !== 0) {
+    if (this.moveCount % 2 == 0) {
       this.moves.push(move)
     }
     else {
@@ -301,11 +357,17 @@ class Chessboard {
     $("#"+captive.pos).empty()
     $("#"+captive.pos).css('color','black')
 
-    if (!this.checkPin(atkr)) {
-      this.move(atkr,captive.pos)
+    this.move(atkr,captive.pos)
+    
+    /*for (let p in this.pinned) {
+      if (this.pins[p].id === captive.id) {
+        delete this.pins[p]
+      }
     }
-
+    */
     delete this.board[captive.id]
+    
+    
     this.clear();
   }
 
@@ -488,6 +550,7 @@ class Pawn extends Piece {
     }
   }
  }
+ 
 
  function generateMoveset(pc,B,indices,limited=false) {
     var pos = [rankMap[pc.pos[0]], Number(pc.pos[1])]
@@ -498,7 +561,6 @@ class Pawn extends Piece {
         while (!boundariesFound) {
             pos[0] += indices[i][0];
             pos[1] += indices[i][1];
-            //console.log(i + ' : ' + pos)
             if (posToTile(pos)) {
                 if(B.freeSpaces.includes(posToTile(pos))) {
                     poss.push(posToTile(pos))
